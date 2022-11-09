@@ -36,6 +36,7 @@ static enum font_type font_current_type = FONT_FIXEDSYS;
 
 static void* font_data_fixedsys;
 static void* font_data_smallfnt;
+static void* font_data_fantasy;
 
 static HashTable fonts_backed;
 
@@ -60,6 +61,8 @@ void font_init() {
 	CHECK_ALLOCATION_ERROR(font_data_fixedsys)
 	font_data_smallfnt = file_load("fonts/Terminal.ttf");
 	CHECK_ALLOCATION_ERROR(font_data_smallfnt)
+	font_data_fantasy  = file_load("fonts/ft88.ttf");
+	CHECK_ALLOCATION_ERROR(font_data_fantasy)
 
 	ht_setup(&fonts_backed, sizeof(struct font_backed_id), sizeof(struct font_backed_data), 8);
 }
@@ -69,8 +72,13 @@ void font_select(enum font_type type) {
 }
 
 static struct font_backed_data* font_find(float h) {
-	if(font_current_type == FONT_SMALLFNT)
+	if(font_current_type == FONT_FIXEDSYS) {
+		h = 16.F;
+	}
+
+	if(font_current_type == FONT_SMALLFNT) {
 		h *= 1.5F;
+	}
 
 	struct font_backed_id id = (struct font_backed_id) {
 		.type = font_current_type,
@@ -86,6 +94,7 @@ static struct font_backed_data* font_find(float h) {
 	switch(font_current_type) {
 		case FONT_FIXEDSYS: file = font_data_fixedsys; break;
 		case FONT_SMALLFNT: file = font_data_smallfnt; break;
+		case FONT_FANTASY:  file = font_data_fantasy; break;
 		default: return NULL;
 	}
 

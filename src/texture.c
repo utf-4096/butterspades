@@ -28,6 +28,8 @@
 #include "lodepng/lodepng.c"
 
 struct texture texture_splash;
+struct texture texture_splash_icon;
+struct texture texture_ui_exit;
 struct texture texture_minimap;
 struct texture texture_gradient;
 struct texture texture_dummy;
@@ -46,6 +48,7 @@ struct texture texture_zoom_smg;
 struct texture texture_zoom_shotgun;
 
 struct texture texture_white;
+struct texture texture_loader;
 struct texture texture_target;
 struct texture texture_indicator;
 
@@ -331,6 +334,7 @@ void texture_gradient_fog(unsigned int* gradient) {
 
 void texture_init() {
 	texture_create(&texture_splash, "png/splash.png");
+	texture_create(&texture_splash_icon, "png/splash_icon.png");
 
 	texture_create(&texture_health, "png/health.png");
 	texture_create(&texture_block, "png/block.png");
@@ -339,11 +343,8 @@ void texture_init() {
 	texture_create(&texture_ammo_smg, "png/smgammo.png");
 	texture_create(&texture_ammo_shotgun, "png/shotgunammo.png");
 
-	texture_create(&texture_zoom_semi, "png/semi.png");
-	texture_create(&texture_zoom_smg, "png/smg.png");
-	texture_create(&texture_zoom_shotgun, "png/shotgun.png");
-
 	texture_create(&texture_white, "png/white.png");
+	texture_create(&texture_loader, "png/splashloader.png");
 	texture_create(&texture_target, "png/target.png");
 	texture_create(&texture_indicator, "png/indicator.png");
 
@@ -353,6 +354,7 @@ void texture_init() {
 	texture_create(&texture_command, "png/command.png");
 	texture_create(&texture_tracer, "png/tracer.png");
 
+	texture_create(&texture_ui_exit, "png/ui/exit.png");
 	texture_create(&texture_ui_wait, "png/ui/wait.png");
 	texture_filter(&texture_ui_wait, TEXTURE_FILTER_LINEAR);
 	texture_create(&texture_ui_join, "png/ui/join.png");

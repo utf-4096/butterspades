@@ -69,9 +69,15 @@ void config_save() {
 	kv6_rebuild_complete();
 
 	config_sets("client", "name", settings.name);
+	config_sets("client", "last_address", settings.last_address);
 	config_seti("client", "xres", settings.window_width);
 	config_seti("client", "yres", settings.window_height);
 	config_seti("client", "windowed", !settings.fullscreen);
+	config_seti("client", "bg_tile", settings.bg_tile);
+	config_setf("client", "bg_tile_speed", settings.bg_tile_speed);
+	config_setf("client", "ui_accent_r", settings.ui_accent_r);
+	config_setf("client", "ui_accent_g", settings.ui_accent_g);
+	config_setf("client", "ui_accent_b", settings.ui_accent_b);
 	config_seti("client", "multisamples", settings.multisamples);
 	config_seti("client", "greedy_meshing", settings.greedy_meshing);
 	config_seti("client", "vsync", settings.vsync);
@@ -162,6 +168,18 @@ static int config_read_key(void* user, const char* section, const char* name, co
 			settings.chat_shadow = atoi(value);
 		} else if(!strcmp(name, "show_player_arms")) {
 			settings.player_arms = atoi(value);
+		} else if(!strcmp(name, "last_address")) {
+			strcpy(settings.last_address, value);
+		} else if(!strcmp(name, "bg_tile")) {
+			settings.bg_tile = atoi(value);
+		} else if(!strcmp(name, "bg_tile_speed")) {
+			settings.bg_tile_speed = fmax(0.0F, atof(value));
+		} else if(!strcmp(name, "ui_accent_r")) {
+			settings.ui_accent_r = max(0, min(255, atoi(value)));
+		} else if(!strcmp(name, "ui_accent_g")) {
+			settings.ui_accent_g = max(0, min(255, atoi(value)));
+		} else if(!strcmp(name, "ui_accent_b")) {
+			settings.ui_accent_b = max(0, min(255, atoi(value)));
 		}
 	}
 	if(!strcmp(section, "controls")) {
@@ -490,6 +508,46 @@ void config_reload() {
 				 .min = 0,
 				 .max = 1,
 				 .name = "Fullscreen",
+			 });
+	list_add(&config_settings,
+			 &(struct config_setting) {
+				 .value = &settings_tmp.bg_tile,
+				 .type = CONFIG_TYPE_INT,
+				 .min = 0,
+				 .max = 1,
+				 .name = "Tile background",
+			 });
+	list_add(&config_settings,
+			 &(struct config_setting) {
+				 .value = &settings_tmp.bg_tile_speed,
+				 .type = CONFIG_TYPE_FLOAT,
+				 .min = 0,
+				 .max = 2,
+				 .name = "Tile speed",
+			 });
+	list_add(&config_settings,
+			 &(struct config_setting) {
+				 .value = &settings_tmp.ui_accent_r,
+				 .type = CONFIG_TYPE_INT,
+				 .min = 0,
+				 .max = 255,
+				 .name = "UI Accent: Red",
+			 });
+	list_add(&config_settings,
+			 &(struct config_setting) {
+				 .value = &settings_tmp.ui_accent_g,
+				 .type = CONFIG_TYPE_INT,
+				 .min = 0,
+				 .max = 255,
+				 .name = "UI Accent: Green",
+			 });
+	list_add(&config_settings,
+			 &(struct config_setting) {
+				 .value = &settings_tmp.ui_accent_b,
+				 .type = CONFIG_TYPE_INT,
+				 .min = 0,
+				 .max = 255,
+				 .name = "UI Accent: Blue",
 			 });
 	list_add(&config_settings,
 			 &(struct config_setting) {

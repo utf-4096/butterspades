@@ -687,6 +687,7 @@ void player_render(struct Player* p, int id) {
 	int render_body = (id != local_player_id || !p->alive || camera_mode != CAMERAMODE_FPS)
 		&& !((camera_mode == CAMERAMODE_BODYVIEW || camera_mode == CAMERAMODE_SPECTATOR)
 			 && cameracontroller_bodyview_mode && cameracontroller_bodyview_player == id);
+
 	int render_fpv = (id == local_player_id && camera_mode == CAMERAMODE_FPS)
 		|| ((camera_mode == CAMERAMODE_BODYVIEW || camera_mode == CAMERAMODE_SPECTATOR)
 			&& cameracontroller_bodyview_mode && cameracontroller_bodyview_player == id);

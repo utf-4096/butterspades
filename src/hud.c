@@ -91,6 +91,20 @@ static void mu_text_color_default(mu_Context* ctx) {
 	ctx->style->colors[MU_COLOR_TEXT] = mu_color(230, 230, 230, 255);
 }
 
+static mu_Color mu_accent_color(float m, int a) {
+	return mu_color(
+		max(0, min(255, settings.ui_accent_r * m)),
+		max(0, min(255, settings.ui_accent_g * m)),
+		max(0, min(255, settings.ui_accent_b * m)),
+		a
+	);
+}
+
+static void mu_text_accent_color(mu_Context* ctx, float m) {
+	mu_Color color = mu_accent_color(m, 255);
+	mu_text_color(ctx, color.r, color.g, color.b);
+}
+
 void hud_change(struct hud* new) {
 	config_key_reset_togglestates();
 	hud_active = new;
@@ -99,9 +113,15 @@ void hud_change(struct hud* new) {
 		mu_init(hud_active->ctx);
 		hud_active->ctx->text_width = mu_text_width;
 		hud_active->ctx->text_height = mu_text_height;
-		hud_active->ctx->style->colors[MU_COLOR_BUTTONHOVER] = mu_color(95, 95, 70, 255);
-		hud_active->ctx->style->colors[MU_COLOR_PANELBG] = mu_color(10, 10, 10, 192);
-		hud_active->ctx->style->colors[MU_COLOR_SCROLLTHUMB] = mu_color(128, 128, 128, 255);
+		hud_active->ctx->style->colors[MU_COLOR_BASE] = mu_accent_color(0.3F, 255);
+		hud_active->ctx->style->colors[MU_COLOR_BORDER] = mu_accent_color(0.8F, 255);
+		hud_active->ctx->style->colors[MU_COLOR_BUTTON] = mu_accent_color(0.3F, 255);
+		hud_active->ctx->style->colors[MU_COLOR_BUTTONHOVER] = mu_accent_color(0.8F, 255);
+		hud_active->ctx->style->colors[MU_COLOR_BUTTONFOCUS] = mu_accent_color(1.0F, 255);
+		hud_active->ctx->style->colors[MU_COLOR_BASEFOCUS] = mu_accent_color(0.5F, 255);
+		hud_active->ctx->style->colors[MU_COLOR_BASEHOVER] = mu_accent_color(0.5F, 255);
+		hud_active->ctx->style->colors[MU_COLOR_PANELBG] = mu_accent_color(0.1F, 192);
+		hud_active->ctx->style->colors[MU_COLOR_SCROLLTHUMB] = mu_accent_color(0.5F, 255);
 	}
 
 	if(hud_active->init)
@@ -450,6 +470,24 @@ static int hud_ingame_onscreencontrol(int index, char* str, int activate) {
 
 static void hud_ingame_render(mu_Context* ctx, float scalex, float scalef) {
 	// window_mousemode(camera_mode==CAMERAMODE_SELECTION?WINDOW_CURSOR_ENABLED:WINDOW_CURSOR_DISABLED);
+	if(show_exit) {
+		glColor4f(1.F, 1.F, 1.F, 1.F);
+		glEnable(GL_BLEND);
+		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+		texture_draw(&texture_ui_exit, 0, settings.window_height, settings.window_width, settings.window_height);
+		glDisable(GL_BLEND);
+
+		glColor3f(1.F, 1.F, 1.F);
+		font_render((settings.window_width - font_length(53.0F * scalef, "EXIT GAME? Y/N")) / 2.0F,
+					settings.window_height / 2.0F + 53.0F * scalef, 53.0F * scalef, "EXIT GAME? Y/N");
+
+		char play_time[128];
+		sprintf(play_time, "Playing for %im%is", (int)window_time() / 60, (int)window_time() % 60);
+		font_render(settings.window_width - font_length(27.0F, play_time) - 8.F, settings.window_height, 27.0F, play_time);
+
+		return;
+	}
+
 	hud_active->render_localplayer = players[local_player_id].team != TEAM_SPECTATOR
 		&& (screen_current == SCREEN_NONE || camera_mode != CAMERAMODE_FPS);
 
@@ -506,37 +544,62 @@ static void hud_ingame_render(mu_Context* ctx, float scalex, float scalef) {
 	}
 
 	if(network_map_transfer) {
-		glColor3f(1.0F, 1.0F, 1.0F);
-		texture_draw(&texture_splash, (settings.window_width - settings.window_height * 4.0F / 3.0F * 0.7F) * 0.5F,
-					 560 * scalef, settings.window_height * 4.0F / 3.0F * 0.7F, settings.window_height * 0.7F);
+		hud_common_render(ctx);
+		mu_Color color = mu_accent_color(1.F, 255);
+		glColor3ub(color.r, color.g, color.b);
+
+		texture_draw(&texture_splash_icon,
+			settings.window_width - texture_splash_icon.width - 16.F,
+			texture_splash_icon.height + 16.F,
+			texture_splash_icon.width,
+			texture_splash_icon.height
+		);
 
 		float p = (compressed_chunk_data_estimate > 0) ?
 			((float)compressed_chunk_data_offset / (float)compressed_chunk_data_estimate) :
 			0.0F;
-		;
+		float p_last = (compressed_chunk_data_estimate > 0) ?
+			(((float)(compressed_chunk_data_offset) - 10.F) / (float)compressed_chunk_data_estimate) :
+			1.0F;
+
 		glColor3ub(68, 68, 68);
-		texture_draw(&texture_white, (settings.window_width - 440.0F * scalef) / 2.0F + 440.0F * scalef * p,
-					 settings.window_height * 0.25F, 440.0F * scalef * (1.0F - p), 20.0F * scalef);
-		glColor3ub(255, 255, 50);
-		texture_draw(&texture_white, (settings.window_width - 440.0F * scalef) / 2.0F, settings.window_height * 0.25F,
-					 440.0F * scalef * p, 20.0F * scalef);
-		glColor3ub(69, 69, 69);
+		texture_draw(&texture_loader, 16.F, texture_white.height / 2 + texture_splash_icon.height / 2, settings.window_width - texture_splash_icon.width - 48.F, texture_white.height);
+		// glColor3ub(
+		// 	(0.5F + sin((1.F * GLM_PI) / 3.F + window_time()) / 2.F) * 255.F,
+		// 	(0.5F + sin((2.F * GLM_PI) / 3.F + window_time()) / 2.F) * 255.F,
+		// 	(0.5F + sin((3.F * GLM_PI) / 3.F + window_time()) / 2.F) * 255.F
+		// );
+
+		glColor3ub(255, 255, 255);
+		texture_draw(&texture_splash, (settings.window_width - settings.window_height * 4.0F / 3.0F * 0.7F) * 0.5F,
+					 560 * scalef, settings.window_height * 4.0F / 3.0F * 0.7F, settings.window_height * 0.7F);
+
+		glColor3ub(color.r, color.g, color.b);
+		texture_draw(
+			&texture_loader,
+			16.F,
+			texture_white.height / 2 + texture_splash_icon.height / 2,
+			(
+				(p_last * (settings.window_width - texture_splash_icon.width - 48.F)) * (1.0F - fminf(1.0F, (network_last_map_chunk_time) / window_time())) + 
+				(p * (settings.window_width - texture_splash_icon.width - 48.F)) * fminf(1.0F, (network_last_map_chunk_time + 1.5F) / window_time())
+			),
+			texture_white.height
+		);
+
+		glColor3f(1.0F, 1.0F, 1.0F);
 		char str[128];
+		
 		sprintf(str, "Loading Map %iKB/%iKB", compressed_chunk_data_offset / 1024,
 				compressed_chunk_data_estimate / 1024);
 		font_centered(settings.window_width / 2.0F, 130 * scalef, 27 * scalef, str);
 
-		font_select(FONT_SMALLFNT);
-		glColor3f(1.0F, 1.0F, 0.0F);
-		font_render(0.0F, 8.0F * scalef, 8.0F * scalef,
-					"Created by ByteBit, visit https://github.com/xtreme8000/BetterSpades");
 		font_select(FONT_FIXEDSYS);
 	} else {
 		if(window_key_down(WINDOW_KEY_HIDEHUD))
 			return;
 
 		if(screen_current == SCREEN_TEAM_SELECT) {
-			glColor3f(1.0F, 0.0F, 0.0F);
+			glColor3f(1.0F, 1.0F, 1.0F);
 			char join_str[48];
 			sprintf(join_str, "Press 1 to join %s", gamestate.team_1.name);
 			font_centered(settings.window_width / 4.0F, 61 * scalef, 18.0F * scalef, join_str);
@@ -695,37 +758,8 @@ static void hud_ingame_render(mu_Context* ctx, float scalex, float scalef) {
 			   && cameracontroller_bodyview_mode)) {
 			glColor3f(1.0F, 1.0F, 1.0F);
 
-			if(players[local_id].held_item == TOOL_GUN && players[local_id].input.buttons.rmb
-			   && players[local_id].alive) {
-				struct texture* zoom;
-				switch(players[local_id].weapon) {
-					case WEAPON_RIFLE: zoom = &texture_zoom_semi; break;
-					case WEAPON_SMG: zoom = &texture_zoom_smg; break;
-					case WEAPON_SHOTGUN: zoom = &texture_zoom_shotgun; break;
-				}
-				float last_shot = is_local ? weapon_last_shot : players[local_id].gun_shoot_timer;
-				float zoom_factor = fmax(
-					0.25F * (1.0F - ((window_time() - last_shot) / weapon_delay(players[local_id].weapon))) + 1.0F,
-					1.0F);
-				float aspect_ratio = (float)zoom->width / (float)zoom->height;
-
-				texture_draw(zoom, (settings.window_width - settings.window_height * aspect_ratio * zoom_factor) / 2.0F,
-							 settings.window_height * (zoom_factor * 0.5F + 0.5F),
-							 settings.window_height * aspect_ratio * zoom_factor, settings.window_height * zoom_factor);
-				texture_draw_sector(zoom, 0, settings.window_height * (zoom_factor * 0.5F + 0.5F),
-									(settings.window_width - settings.window_height * aspect_ratio * zoom_factor)
-										/ 2.0F,
-									settings.window_height * zoom_factor, 0.0F, 0.0F, 1.0F / (float)zoom->width, 1.0F);
-				texture_draw_sector(
-					zoom, (settings.window_width + settings.window_height * aspect_ratio * zoom_factor) / 2.0F,
-					settings.window_height * (zoom_factor * 0.5F + 0.5F),
-					(settings.window_width - settings.window_height * aspect_ratio * zoom_factor) / 2.0F,
-					settings.window_height * zoom_factor, (float)(zoom->width - 1) / (float)zoom->width, 0.0F,
-					1.0F / (float)zoom->width, 1.0F);
-			} else {
-				texture_draw(&texture_target, (settings.window_width - 16) / 2.0F, (settings.window_height + 16) / 2.0F,
-							 16, 16);
-			}
+			texture_draw(&texture_target, ceil((settings.window_width - texture_target.width) / 2.0F), ceil((settings.window_height + texture_target.height) / 2.0F),
+							 texture_target.width, texture_target.height);
 
 			if(window_time() - local_player_last_damage_timer <= 0.5F && is_local) {
 				float ang = atan2(players[local_player_id].orientation.z, players[local_player_id].orientation.x)
@@ -740,16 +774,19 @@ static void hud_ingame_render(mu_Context* ctx, float scalex, float scalef) {
 				glColor3f(1, 0, 0);
 			else
 				glColor3f(1, 1, 1);
+
+			font_select(FONT_FANTASY);
 			char hp[4];
 			sprintf(hp, "%i", health);
-			font_render(settings.window_width / 2.0F - font_length(53.0F * scalef, hp), 53.0F * scalef, 53.0F * scalef,
-						hp);
-			texture_draw(&texture_health, settings.window_width / 2.0F, 44.0F * scalef, 32.0F * scalef, 32.0F * scalef);
+			texture_draw(&texture_health, 8.F, 40.F, 36.0F, 32.F);
+			font_render(48.F, 38.F, 30.F, hp);
 
 			char item_mini_str[32];
 			struct texture* item_mini;
 			int off = 0;
-			glColor3f(1.0F, 1.0F, 0.0F);
+
+			mu_Color color = mu_accent_color(1.F, 255);
+			glColor3ub(color.r, color.g, color.b);
 			switch(players[local_id].held_item) {
 				default:
 				case TOOL_BLOCK: off = 64 * scalef;
@@ -764,7 +801,7 @@ static void hud_ingame_render(mu_Context* ctx, float scalex, float scalef) {
 				case TOOL_GUN: {
 					int ammo = is_local ? local_player_ammo : players[local_id].ammo;
 					int ammo_reserve = is_local ? local_player_ammo_reserved : players[local_id].ammo_reserved;
-					sprintf(item_mini_str, "%i-%i", ammo, ammo_reserve);
+					sprintf(item_mini_str, "%i/%i", ammo, ammo_reserve);
 					switch(players[local_id].weapon) {
 						case WEAPON_RIFLE: item_mini = &texture_ammo_semi; break;
 						case WEAPON_SMG: item_mini = &texture_ammo_smg; break;
@@ -776,10 +813,9 @@ static void hud_ingame_render(mu_Context* ctx, float scalex, float scalef) {
 				}
 			}
 
-			texture_draw(item_mini, settings.window_width - 44.0F * scalef - off, 44.0F * scalef, 32.0F * scalef,
-						 32.0F * scalef);
-			font_render(settings.window_width - font_length(53.0F * scalef, item_mini_str) - 44.0F * scalef - off,
-						53.0F * scalef, 53.0F * scalef, item_mini_str);
+			texture_draw(item_mini, settings.window_width - texture_health.width - 8.F, item_mini->height + 8.F, texture_health.width, texture_health.height);
+			font_render(settings.window_width - texture_health.width - 12.F - font_length(30.F, item_mini_str), 37.F, 30.F, item_mini_str);
+			font_select(FONT_FIXEDSYS);
 			glColor3f(1.0F, 1.0F, 1.0F);
 
 			if(players[local_id].held_item == TOOL_BLOCK) {
@@ -788,8 +824,8 @@ static void hud_ingame_render(mu_Context* ctx, float scalex, float scalef) {
 						if(texture_block_color(x, y) == players[local_id].block.packed) {
 							unsigned char g = (((int)(window_time() * 4)) & 1) * 0xFF;
 							glColor3ub(g, g, g);
-							texture_draw_empty(settings.window_width + (x * 8 - 65) * scalef, (65 - y * 8) * scalef,
-											   8 * scalef, 8 * scalef);
+							texture_draw_empty(settings.window_width + (x * 8 - 65 - 7), 48.F + (65 - y * 8),
+											   8, 8);
 							y = 10; // to break outer loop too
 							break;
 						}
@@ -797,8 +833,7 @@ static void hud_ingame_render(mu_Context* ctx, float scalex, float scalef) {
 				}
 				glColor3f(1.0F, 1.0F, 1.0F);
 
-				texture_draw(&texture_color_selection, settings.window_width - 64 * scalef, 64 * scalef, 64 * scalef,
-							 64 * scalef);
+				texture_draw(&texture_color_selection, settings.window_width - 64 - 7, 48.F + 64, 64, 64);
 			}
 		}
 
@@ -876,20 +911,6 @@ static void hud_ingame_render(mu_Context* ctx, float scalex, float scalef) {
 			glColor3f(1.0F, 1.0F, 1.0F);
 			texture_draw(&texture_splash, (settings.window_width - 240 * scalef) * 0.5F, 599 * scalef, 240 * scalef,
 						 180 * scalef);
-			glColor3f(1.0F, 1.0F, 0.0F);
-			font_centered(settings.window_width / 2.0F, 420 * scalef, 27 * scalef, "CONTROLS");
-			char help_str[2][18][16] = {{"Movement", "Fire", "Gunsight", "Weapons", "Reload", "Jump", "Crouch", "Sneak",
-										 "Sprint", "View Score", "Map", "Change Team", "Change Weapon", "Global Chat",
-										 "Team Chat", "Color Select", "Grab Color", "Quit"},
-										{"W S A D", "L. Mouse", "R. Mouse", "1-4/Wheel", "R", "Space", "CTRL", "V",
-										 "SHIFT", "TAB", "M", ",", ".", "T", "Y", "Arrow Keys", "E", "ESC"}};
-			for(int k = 0; k < 18; k++) {
-				font_render(settings.window_width / 2.0F - font_length(18 * scalef, help_str[0][k]),
-							(420 - 27 - 18 * k) * scalef, 18 * scalef, help_str[0][k]);
-				font_render(settings.window_width / 2.0F + font_length(18 * scalef, " "), (420 - 27 - 18 * k) * scalef,
-							18 * scalef, help_str[1][k]);
-			}
-			glColor3f(1.0F, 1.0F, 1.0F);
 		}
 
 		if(gamestate.gamemode_type == GAMEMODE_TC && gamestate.progressbar.tent < gamestate.gamemode.tc.territory_count
@@ -1034,6 +1055,17 @@ static void hud_ingame_render(mu_Context* ctx, float scalex, float scalef) {
 				// minimized, top right
 				float view_x = camera_x - 64.0F; // min(max(camera_x-64.0F,0.0F),map_size_x+1-128.0F);
 				float view_z = camera_z - 64.0F; // min(max(camera_z-64.0F,0.0F),map_size_z+1-128.0F);
+				char sector_str[3] = {(int)(camera_x / 64.0F) + 'A', (int)(camera_z / 64.0F) + '1', 0};
+				glColor4f(0.F, 0.F, 0.F, 0.7F);
+				glEnable(GL_BLEND);
+				glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+				texture_draw_empty(
+					settings.window_width - 82 * scalef - font_length(20.F, sector_str) / 2,
+					454 * scalef,
+					font_length(20.F, sector_str) + 5 * scalef,
+					16.F
+				);
+				glDisable(GL_BLEND);
 
 				switch(players[local_player_id].team) {
 					case TEAM_1: glColor3ub(gamestate.team_1.red, gamestate.team_1.green, gamestate.team_1.blue); break;
@@ -1041,9 +1073,7 @@ static void hud_ingame_render(mu_Context* ctx, float scalex, float scalef) {
 					case TEAM_SPECTATOR:
 					default: glColor3f(0.0F, 0.0F, 0.0F); // same as chat
 				}
-
-				char sector_str[3] = {(int)(camera_x / 64.0F) + 'A', (int)(camera_z / 64.0F) + '1', 0};
-				font_centered(settings.window_width - 79 * scalef, 456 * scalef, 20.0F * scalef, sector_str);
+				font_centered(settings.window_width - 79 * scalef, 456 * scalef, 20.0F, sector_str);
 
 				glColor3ub(0, 0, 0);
 				texture_draw_empty(settings.window_width - 144 * scalef, 586 * scalef, 130 * scalef, 130 * scalef);
@@ -1175,16 +1205,6 @@ static void hud_ingame_render(mu_Context* ctx, float scalex, float scalef) {
 			font_select(FONT_FIXEDSYS);
 		}
 
-		if(show_exit) {
-			glColor3f(1.0F, 0.0F, 0.0F);
-			font_render((settings.window_width - font_length(53.0F * scalef, "EXIT GAME? Y/N")) / 2.0F,
-						settings.window_height / 2.0F + 53.0F * scalef, 53.0F * scalef, "EXIT GAME? Y/N");
-
-			char play_time[128];
-			sprintf(play_time, "Playing for %im%is", (int)window_time() / 60, (int)window_time() % 60);
-			font_render(settings.window_width - font_length(27.0F * scalef, play_time), settings.window_height,
-						27.0F * scalef, play_time);
-		}
 		if(window_time() - chat_popup_timer < chat_popup_duration) {
 			glColor3ub(red(chat_popup_color), green(chat_popup_color), blue(chat_popup_color));
 			font_render((settings.window_width - font_length(53.0F * scalef, chat_popup)) / 2.0F,
@@ -1529,6 +1549,22 @@ static void hud_ingame_keyboard(int key, int action, int mods, int internal) {
 				}
 			}
 
+			if(show_exit) {
+				if(key == WINDOW_KEY_NO || key == WINDOW_KEY_ESCAPE) {
+					show_exit = 0;
+					window_mousemode(WINDOW_CURSOR_DISABLED);
+				} else if(key == WINDOW_KEY_YES) {
+					if(show_exit) {
+						hud_change(&hud_serverlist);
+					} else {
+						window_textinput(1);
+						chat_input_mode = CHAT_TEAM_INPUT;
+						chat[0][0][0] = 0;
+					}
+				}
+				return;
+			}
+
 			if(key == WINDOW_KEY_LASTTOOL) {
 				int tmp = players[local_player_id].held_item;
 				players[local_player_id].held_item = local_player_lasttool;
@@ -1561,21 +1597,6 @@ static void hud_ingame_keyboard(int key, int action, int mods, int internal) {
 				window_textinput(1);
 				chat_input_mode = CHAT_ALL_INPUT;
 				chat[0][0][0] = 0;
-			}
-
-			if(show_exit && key == WINDOW_KEY_NO) {
-				show_exit = 0;
-				window_mousemode(WINDOW_CURSOR_DISABLED);
-			}
-
-			if(key == WINDOW_KEY_YES) {
-				if(show_exit) {
-					hud_change(&hud_serverlist);
-				} else {
-					window_textinput(1);
-					chat_input_mode = CHAT_TEAM_INPUT;
-					chat[0][0][0] = 0;
-				}
 			}
 
 			if((key == WINDOW_KEY_CURSOR_UP || key == WINDOW_KEY_CURSOR_DOWN || key == WINDOW_KEY_CURSOR_LEFT
@@ -1762,6 +1783,11 @@ static void hud_ingame_keyboard(int key, int action, int mods, int internal) {
 			}
 
 			if(key == WINDOW_KEY_ESCAPE) {
+				if(network_map_transfer) {
+					hud_change(&hud_serverlist);
+					return;
+				}
+
 				show_exit ^= 1;
 				window_mousemode(show_exit ? WINDOW_CURSOR_ENABLED : WINDOW_CURSOR_DISABLED);
 				return;
@@ -1989,7 +2015,7 @@ static void hud_serverlist_init() {
 		request_news = http_get("http://aos.party/bs/news/", NULL);
 
 	serverlist_con_established = request_serverlist != NULL;
-	*serverlist_input = 0;
+	memcpy(serverlist_input, settings.last_address, sizeof settings.last_address);
 
 	pthread_mutex_init(&serverlist_lock, NULL);
 	window_textinput(1);
@@ -2091,6 +2117,9 @@ static void server_c(char* address, char* name) {
 		if(network_connect_string(address))
 			hud_change(&hud_ingame);
 	}
+
+	memcpy(&settings.last_address, address, 128);
+	config_save();
 }
 
 static struct texture* hud_serverlist_ui_images(int icon_id, bool* resize) {
@@ -2116,13 +2145,35 @@ static struct texture* hud_serverlist_ui_images(int icon_id, bool* resize) {
 	}
 }
 
-static void hud_serverlist_render(mu_Context* ctx, float scalex, float scaley) {
+void hud_common_render(mu_Context* ctx) {
 	glColor3f(0.5F, 0.5F, 0.5F);
-	float t = window_time() * 0.03125F;
-	texture_draw_sector(&texture_ui_bg, 0.0F, settings.window_height, settings.window_width, settings.window_height, t,
-						t, settings.window_width / 512.0F, settings.window_height / 512.0F);
+	if(settings.bg_tile) {
+		float t = window_time() * settings.bg_tile_speed;
+		texture_draw_sector(
+			&texture_ui_bg,
+			0.0F,
+			settings.window_height,
+			settings.window_width,
+			settings.window_height,
+			t,
+			t,
+			(float) settings.window_width / (float) texture_ui_bg.width,
+			(float) settings.window_height / (float) texture_ui_bg.height
+		);
+	} else {
+		texture_draw(&texture_ui_bg,
+			0.0F,
+			settings.window_height,
+			settings.window_width,
+			settings.window_height
+		);
+	}
+}
 
-	mu_Rect frame = mu_rect(settings.window_width * 0.125F, 0, settings.window_width * 0.75F, settings.window_height);
+static void hud_serverlist_render(mu_Context* ctx, float scalex, float scaley) {
+	hud_common_render(ctx);
+
+	mu_Rect frame = mu_rect(settings.window_width / 2.F - fminf(1024.F, settings.window_width * 0.75F) / 2.F, 0, fminf(1024.F, settings.window_width * 0.75F), settings.window_height);
 
 	if(mu_begin_window_ex(ctx, "Main", frame, MU_OPT_NOFRAME | MU_OPT_NOTITLE | MU_OPT_NORESIZE)) {
 		mu_Container* cnt = mu_get_current_container(ctx);
@@ -2132,7 +2183,7 @@ static void hud_serverlist_render(mu_Context* ctx, float scalex, float scaley) {
 		int B = ctx->text_width(ctx->style->font, "Settings", 0) * 1.5F;
 		int C = ctx->text_width(ctx->style->font, "Controls", 0) * 1.5F;
 		mu_layout_row(ctx, 4, (int[]) {A, B, C, -1}, 0);
-		mu_text_color(ctx, 255, 255, 0);
+		mu_text_accent_color(ctx, 1.F);
 		mu_button_ex(ctx, "Servers", 0, MU_OPT_NOINTERACT | MU_OPT_ALIGNCENTER);
 		mu_text_color_default(ctx);
 		if(mu_button(ctx, "Settings"))
@@ -2175,12 +2226,17 @@ static void hud_serverlist_render(mu_Context* ctx, float scalex, float scaley) {
 		}
 
 		int a = ctx->text_width(ctx->style->font, "Refresh", 0) * 1.6F;
-		int b = ctx->text_width(ctx->style->font, "Join", 0) * 2.0F;
-		mu_layout_row(ctx, 3, (int[]) {-a - b, -a, -1}, 0);
+		int b = ctx->text_width(ctx->style->font, "Local", 0) * 4.0F;
+		int c = ctx->text_width(ctx->style->font, "Join", 0) * 2.0F;
+		mu_layout_row(ctx, 4, (int[]) {-c - b, -b, -a, -1}, 0);
+
 		if(mu_textbox(ctx, serverlist_input, sizeof(serverlist_input)) & MU_RES_SUBMIT)
 			server_c(serverlist_input, NULL);
 		if(mu_button_ex(ctx, "Join", 16, MU_OPT_ALIGNRIGHT))
 			server_c(serverlist_input, NULL);
+
+		if(mu_button_ex(ctx, "Local", 16, MU_OPT_ALIGNRIGHT))
+			server_c("aos://16777343:32887", NULL);
 
 		if(mu_button_ex(ctx, "Refresh", 17, MU_OPT_ALIGNRIGHT) && !request_serverlist)
 			hud_serverlist_init();
@@ -2191,7 +2247,7 @@ static void hud_serverlist_render(mu_Context* ctx, float scalex, float scaley) {
 		int width = mu_get_current_container(ctx)->body.w;
 
 		int flag_width = ctx->style->size.y + ctx->style->padding * 2;
-		mu_layout_row(ctx, 5, (int[]) {0.12F * width, 0.418F * width, 0.22F * width, 0.117F * width, -1}, 0);
+		mu_layout_row(ctx, 5, (int[]) {fminf(82.F, 0.12F * width), 0.418F * width, 0.22F * width, 0.117F * width, -1}, 0);
 
 		if(mu_button(ctx, "Players")) {
 			pthread_mutex_lock(&serverlist_lock);
@@ -2220,61 +2276,58 @@ static void hud_serverlist_render(mu_Context* ctx, float scalex, float scaley) {
 		}
 
 		mu_layout_row(ctx, 6,
-					  (int[]) {0.12F * width, flag_width, 0.418F * width - flag_width - ctx->style->spacing * 2,
+					  (int[]) {fminf(82.F, 0.12F * width), flag_width, 0.418F * width - flag_width - ctx->style->spacing * 2,
 							   0.22F * width, 0.117F * width, -1},
 					  0);
 
 		pthread_mutex_lock(&serverlist_lock);
 		if(server_count > 0) {
 			for(int k = 0; k < server_count; k++) {
-				if(strstr(serverlist[k].name, serverlist_input) || strstr(serverlist[k].identifier, serverlist_input)
-				   || strstr(serverlist[k].map, serverlist_input) || strstr(serverlist[k].gamemode, serverlist_input)) {
-					if(serverlist[k].current >= 0)
-						sprintf(total_str, "%i/%i", serverlist[k].current, serverlist[k].max);
+				if(serverlist[k].current >= 0)
+					sprintf(total_str, "%i/%i", serverlist[k].current, serverlist[k].max);
+				else
+					strcpy(total_str, "-");
+
+				int f = ((serverlist[k].current && serverlist[k].current < serverlist[k].max)
+						 || serverlist[k].current < 0) ?
+					1 :
+					2;
+
+				mu_push_id(ctx, &serverlist[k].identifier, strlen(serverlist[k].identifier));
+
+				mu_text_color(ctx, 230 / f, 230 / f, 230 / f);
+				bool join = false;
+				if(mu_button_ex(ctx, total_str, 0, MU_OPT_NOFRAME | MU_OPT_ALIGNCENTER))
+					join = true;
+				if(mu_button_ex(ctx, "", texture_flag_index(serverlist[k].country) + HUD_FLAG_INDEX_START,
+								MU_OPT_NOFRAME))
+					join = true;
+				if(mu_button_ex(ctx, serverlist[k].name, 0, MU_OPT_NOFRAME))
+					join = true;
+				if(mu_button_ex(ctx, serverlist[k].map, 0, MU_OPT_NOFRAME))
+					join = true;
+				if(mu_button_ex(ctx, serverlist[k].gamemode, 0, MU_OPT_NOFRAME | MU_OPT_ALIGNCENTER))
+					join = true;
+
+				if(serverlist[k].ping >= 0) {
+					if(serverlist[k].ping < 110)
+						mu_text_color(ctx, 0, 255 / f, 0);
+					else if(serverlist[k].ping < 200)
+						mu_text_color(ctx, 255 / f, 255 / f, 0);
 					else
-						strcpy(total_str, "-");
+						mu_text_color(ctx, 255 / f, 0, 0);
+				}
 
-					int f = ((serverlist[k].current && serverlist[k].current < serverlist[k].max)
-							 || serverlist[k].current < 0) ?
-						1 :
-						2;
+				sprintf(total_str, "%ims", serverlist[k].ping);
+				if(mu_button_ex(ctx, (serverlist[k].ping >= 0) ? total_str : "?", 0,
+								MU_OPT_NOFRAME | MU_OPT_ALIGNCENTER))
+					join = true;
 
-					mu_push_id(ctx, &serverlist[k].identifier, strlen(serverlist[k].identifier));
+				mu_pop_id(ctx);
 
-					mu_text_color(ctx, 230 / f, 230 / f, 230 / f);
-					bool join = false;
-					if(mu_button_ex(ctx, total_str, 0, MU_OPT_NOFRAME | MU_OPT_ALIGNCENTER))
-						join = true;
-					if(mu_button_ex(ctx, "", texture_flag_index(serverlist[k].country) + HUD_FLAG_INDEX_START,
-									MU_OPT_NOFRAME))
-						join = true;
-					if(mu_button_ex(ctx, serverlist[k].name, 0, MU_OPT_NOFRAME))
-						join = true;
-					if(mu_button_ex(ctx, serverlist[k].map, 0, MU_OPT_NOFRAME))
-						join = true;
-					if(mu_button_ex(ctx, serverlist[k].gamemode, 0, MU_OPT_NOFRAME | MU_OPT_ALIGNCENTER))
-						join = true;
-
-					if(serverlist[k].ping >= 0) {
-						if(serverlist[k].ping < 110)
-							mu_text_color(ctx, 0, 255 / f, 0);
-						else if(serverlist[k].ping < 200)
-							mu_text_color(ctx, 255 / f, 255 / f, 0);
-						else
-							mu_text_color(ctx, 255 / f, 0, 0);
-					}
-
-					sprintf(total_str, "%ims", serverlist[k].ping);
-					if(mu_button_ex(ctx, (serverlist[k].ping >= 0) ? total_str : "?", 0,
-									MU_OPT_NOFRAME | MU_OPT_ALIGNCENTER))
-						join = true;
-
-					mu_pop_id(ctx);
-
-					if(join) {
-						server_c(serverlist[k].identifier, serverlist[k].name);
-						break;
-					}
+				if(join) {
+					server_c(serverlist[k].identifier, serverlist[k].name);
+					break;
 				}
 			}
 		} else {
@@ -2293,7 +2346,7 @@ static void hud_serverlist_render(mu_Context* ctx, float scalex, float scaley) {
 							 MU_OPT_HOLDFOCUS | MU_OPT_NORESIZE | MU_OPT_NOCLOSE)) {
 		mu_Container* cnt = mu_get_current_container(ctx);
 		mu_bring_to_front(ctx, cnt);
-		cnt->rect = mu_rect((settings.window_width - 350 * scaley) / 2, 200 * scaley, 350 * scaley, 200 * scaley);
+		cnt->rect = mu_rect((settings.window_width - 350) / 2, 200, 350, 200);
 		mu_layout_row(ctx, 1, (int[]) {-1}, -ctx->text_height(ctx->style->font) * 1.75F);
 		mu_text(ctx,
 				"Your game is outdated and should be updated immediately.\n\n"
@@ -2312,7 +2365,7 @@ static void hud_serverlist_render(mu_Context* ctx, float scalex, float scaley) {
 							 MU_OPT_HOLDFOCUS | MU_OPT_NORESIZE | MU_OPT_NOCLOSE)) {
 		mu_Container* cnt = mu_get_current_container(ctx);
 		mu_bring_to_front(ctx, cnt);
-		cnt->rect = mu_rect((settings.window_width - 300 * scaley) / 2, 250 * scaley, 300 * scaley, 100 * scaley);
+		cnt->rect = mu_rect((settings.window_width - 300) / 2, 250, 300, 100);
 		mu_layout_row(ctx, 2, (int[]) {ctx->text_width(ctx->style->font, "Reason:", 0) * 1.5F, -1}, 0);
 		mu_text(ctx, "Reason:");
 		mu_text(ctx, chat_popup);
@@ -2518,12 +2571,9 @@ static struct texture* hud_settings_ui_images(int icon_id, bool* resize) {
 }
 
 static void hud_settings_render(mu_Context* ctx, float scalex, float scaley) {
-	glColor3f(0.5F, 0.5F, 0.5F);
-	float t = window_time() * 0.03125F;
-	texture_draw_sector(&texture_ui_bg, 0.0F, settings.window_height, settings.window_width, settings.window_height, t,
-						t, settings.window_width / 512.0F, settings.window_height / 512.0F);
+	hud_common_render(ctx);
 
-	mu_Rect frame = mu_rect(settings.window_width * 0.125F, 0, settings.window_width * 0.75F, settings.window_height);
+	mu_Rect frame = mu_rect(settings.window_width / 2.F - fminf(1024.F, settings.window_width * 0.75F) / 2.F, 0, fminf(1024.F, settings.window_width * 0.75F), settings.window_height);
 
 	if(mu_begin_window_ex(ctx, "Main", frame, MU_OPT_NOFRAME | MU_OPT_NOTITLE | MU_OPT_NORESIZE)) {
 		mu_Container* cnt = mu_get_current_container(ctx);
@@ -2535,7 +2585,7 @@ static void hud_settings_render(mu_Context* ctx, float scalex, float scaley) {
 		mu_layout_row(ctx, 4, (int[]) {A, B, C, -1}, 0);
 		if(mu_button(ctx, "Servers"))
 			hud_change(&hud_serverlist);
-		mu_text_color(ctx, 255, 255, 0);
+		mu_text_accent_color(ctx, 1.F);
 		mu_button_ex(ctx, "Settings", 0, MU_OPT_NOINTERACT | MU_OPT_ALIGNCENTER);
 		mu_text_color_default(ctx);
 		if(mu_button(ctx, "Controls"))
@@ -2655,12 +2705,9 @@ static void hud_controls_init() {
 }
 
 static void hud_controls_render(mu_Context* ctx, float scalex, float scaley) {
-	glColor3f(0.5F, 0.5F, 0.5F);
-	float t = window_time() * 0.03125F;
-	texture_draw_sector(&texture_ui_bg, 0.0F, settings.window_height, settings.window_width, settings.window_height, t,
-						t, settings.window_width / 512.0F, settings.window_height / 512.0F);
+	hud_common_render(ctx);
 
-	mu_Rect frame = mu_rect(settings.window_width * 0.125F, 0, settings.window_width * 0.75F, settings.window_height);
+	mu_Rect frame = mu_rect(settings.window_width / 2.F - fminf(1024.F, settings.window_width * 0.75F) / 2.F, 0, fminf(1024.F, settings.window_width * 0.75F), settings.window_height);
 
 	if(mu_begin_window_ex(ctx, "Main", frame, MU_OPT_NOFRAME | MU_OPT_NOTITLE | MU_OPT_NORESIZE)) {
 		mu_Container* cnt = mu_get_current_container(ctx);
@@ -2674,7 +2721,7 @@ static void hud_controls_render(mu_Context* ctx, float scalex, float scaley) {
 			hud_change(&hud_serverlist);
 		if(mu_button(ctx, "Settings"))
 			hud_change(&hud_settings);
-		mu_text_color(ctx, 255, 255, 0);
+		mu_text_accent_color(ctx, 1.F);
 		mu_button_ex(ctx, "Controls", 0, MU_OPT_NOINTERACT | MU_OPT_ALIGNCENTER);
 		mu_text_color_default(ctx);
 		mu_button_ex(ctx, "", 0, MU_OPT_ALIGNRIGHT | MU_OPT_NOINTERACT);

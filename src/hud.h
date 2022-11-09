@@ -52,6 +52,7 @@ struct serverlist_entry {
 };
 
 extern int screen_current;
+extern int show_exit;
 
 extern struct hud hud_ingame;
 extern struct hud hud_mapload;
@@ -67,5 +68,6 @@ extern struct window_instance* hud_window;
 void hud_change(struct hud* new);
 void hud_init();
 void hud_mousemode(int mode);
+void hud_common_render(mu_Context* ctx);
 
 #endif

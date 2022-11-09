@@ -23,6 +23,7 @@
 enum font_type {
 	FONT_FIXEDSYS,
 	FONT_SMALLFNT,
+	FONT_FANTASY,
 };
 
 void font_init(void);

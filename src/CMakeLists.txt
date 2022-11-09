@@ -198,6 +198,13 @@ add_custom_command(
 	COMMAND ${CMAKE_COMMAND} -E tar xzf ${BetterSpades_SOURCE_DIR}/bsresources.zip
 )
 
+add_custom_command(
+	TARGET client
+	POST_BUILD
+	COMMENT "Copying overrides..."
+	COMMAND ${CMAKE_COMMAND} -E copy_directory ${BetterSpades_SOURCE_DIR}/resources.override ${BetterSpades_SOURCE_DIR}/build/BetterSpades
+)
+
 install(
 	TARGETS client
 	RUNTIME

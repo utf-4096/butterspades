@@ -148,8 +148,8 @@ void cameracontroller_fps(float dt) {
 		players[local_player_id].item_disabled = window_time();
 	} else {
 		if(window_time() - players[local_player_id].item_disabled < 0.4F && !players[local_player_id].items_show) {
-			players[local_player_id].items_show_start = window_time();
-			players[local_player_id].items_show = 1;
+			// players[local_player_id].items_show_start = window_time();
+			// players[local_player_id].items_show = 1;
 		}
 	}
 

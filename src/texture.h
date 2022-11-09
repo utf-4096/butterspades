@@ -27,6 +27,7 @@ struct texture {
 };
 
 extern struct texture texture_splash;
+extern struct texture texture_splash_icon;
 extern struct texture texture_minimap;
 extern struct texture texture_gradient;
 extern struct texture texture_dummy;
@@ -40,11 +41,8 @@ extern struct texture texture_ammo_shotgun;
 
 extern struct texture texture_color_selection;
 
-extern struct texture texture_zoom_semi;
-extern struct texture texture_zoom_smg;
-extern struct texture texture_zoom_shotgun;
-
 extern struct texture texture_white;
+extern struct texture texture_loader;
 extern struct texture texture_target;
 extern struct texture texture_indicator;
 
@@ -54,6 +52,7 @@ extern struct texture texture_intel;
 extern struct texture texture_command;
 extern struct texture texture_tracer;
 
+extern struct texture texture_ui_exit;
 extern struct texture texture_ui_wait;
 extern struct texture texture_ui_join;
 extern struct texture texture_ui_reload;

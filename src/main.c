@@ -397,7 +397,7 @@ void display() {
 		mu_Context* ctx = hud_active->ctx;
 
 		if(ctx) {
-			hud_active->ctx->style->padding = 10 * scalef - 5;
+			hud_active->ctx->style->padding = 5;
 			hud_active->ctx->style->spacing = 8 * scalef - 4;
 			hud_active->ctx->style->title_height = 48 * scalef - 24;
 			hud_active->ctx->style->scrollbar_size = 12 * scalef;
@@ -565,6 +565,10 @@ void keys(struct window_instance* window, int key, int scancode, int action, int
 	}
 
 	if(action == WINDOW_PRESS) {
+		if(show_exit && key != WINDOW_KEY_NO && key != WINDOW_KEY_YES && key != WINDOW_KEY_ESCAPE) {
+			return;
+		}
+
 		if(config_key(key)->toggle) {
 			if(chat_input_mode == CHAT_NO_INPUT) {
 				window_pressed_keys[key] = !window_pressed_keys[key];

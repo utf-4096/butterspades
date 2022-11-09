@@ -32,6 +32,7 @@ struct config_file_entry {
 
 extern struct RENDER_OPTIONS {
 	char name[16];
+	char last_address[128];
 	int opengl14;
 	int color_correction;
 	int shadow_entities;
@@ -42,6 +43,11 @@ extern struct RENDER_OPTIONS {
 	int multisamples;
 	int player_arms;
 	int fullscreen;
+	int bg_tile;
+	float bg_tile_speed;
+	int ui_accent_r;
+	int ui_accent_g;
+	int ui_accent_b;
 	int greedy_meshing;
 	int vsync;
 	float mouse_sensitivity;
