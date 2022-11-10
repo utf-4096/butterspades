@@ -1,34 +1,8 @@
-[![Build Status](https://aos.party/jenkins/buildStatus/icon?job=BetterSpades)](https://aos.party/jenkins/job/BetterSpades/)
-[![](https://img.shields.io/github/downloads/xtreme8000/BetterSpades/total.svg)](https://github.com/xtreme8000/BetterSpades/releases)
-[![Discord](https://img.shields.io/badge/discord-join-ff00ff.svg)](https://discord.gg/9JGXKBt)
-[![GPL](https://img.shields.io/badge/license-GPL--3.0-red.svg)](https://github.com/xtreme8000/BetterSpades/blob/standalone/LICENSE)
-[![DonateBTC](https://img.shields.io/badge/bitcoin-donate-yellow.svg)](https://github.com/xtreme8000/BetterSpades#donate)
-
 ![GPL v3](https://www.gnu.org/graphics/gplv3-127x51.png)
 
 ## ![](docs/icon_small.png) ButterSpades
-
-* Replicate of the great game *Ace of Spades* (classic voxlap)
-* runs on very old systems back to OpenGL 1.1 (OpenGL ES support too)
-* shares similar if not even better performance to voxlap
-* can run on *"embedded"* systems like a [Steam Link](https://store.steampowered.com/app/353380/Steam_Link/)
-
-#### Why should I use this instead of ...?
-
-* free of any Jagex code, they can't shut it down
-* open for future expansion
-* easy to use
-* no hidden bugs
-
-### Quick usage guide
-
-**As of right now, you can download the newest stable version from the [releases page](https://github.com/xtreme8000/BetterSpades/releases).**
-
-**You can get [nightly builds here](https://aos.party/jenkins/job/BetterSpades/).**
-
-You can either:
-* use the client temporarily by extracting the downloaded zip into a new directory.
-* extract all contents to your current Ace of Spades installation directory (normally found at `C:/Ace of Spades/`), effectively replacing the old voxlap version
+ButterSpades is a fork which aims to improve overall UI and gameplay.
+This repo is maintained by utf and contributors, please expect infrequent updates.
 
 ## System requirements
 
