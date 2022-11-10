@@ -8,6 +8,7 @@ FetchContent_Declare(
 
 set(CGLM_STATIC ON CACHE INTERNAL "")
 set(CGLM_USE_C99 ON CACHE INTERNAL "")
+set(MIRRORS https://butter.penguins.win/mirror)
 FetchContent_MakeAvailable(cglm)
 
 FetchContent_Declare(
@@ -19,6 +20,8 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(vxl)
 
 macro(download_file_if_it_doesnt_exist filename url)
+	set(argn ${ARGN})
+	list(LENGTH argn no_fallback)
 	if (NOT EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/${filename})
 		message(STATUS "Downloading ${filename}")
 		file(DOWNLOAD ${url} ${CMAKE_CURRENT_SOURCE_DIR}/${filename} STATUS stat)
@@ -28,7 +31,25 @@ macro(download_file_if_it_doesnt_exist filename url)
 			message(STATUS "Downloaded ${filename} successfully")
 		else()
 			file(REMOVE ${CMAKE_CURRENT_SOURCE_DIR}/${filename})
-			message(FATAL_ERROR "Failed to download ${filename} (${error})")
+			message(WARNING "Failed to download ${filename} (${error})")
+
+			if(${no_fallback} EQUAL 0)
+				foreach(mirror ${MIRRORS})
+					string(SHA256 mirror_url_hash ${url})
+					set(mirror_url ${mirror}/${mirror_url_hash})
+					message(STATUS "Trying alternate URL ${mirror_url}")
+					download_file_if_it_doesnt_exist(${filename} ${mirror_url} 1)
+					if (EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/${filename})
+						# Success
+						break()
+					endif()
+				endforeach()
+
+				if (NOT EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/${filename})
+					# Everything failed, exit
+					message(FATAL_ERROR "Failed to download ${filename} from all sources.")
+				endif()
+			endif()
 		endif()
 	endif()
 endmacro(download_file_if_it_doesnt_exist)
