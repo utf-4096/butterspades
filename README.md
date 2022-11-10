@@ -6,7 +6,7 @@
 
 ![GPL v3](https://www.gnu.org/graphics/gplv3-127x51.png)
 
-## ![](docs/icon_small.png) BetterSpades
+## ![](docs/icon_small.png) ButterSpades
 
 * Replicate of the great game *Ace of Spades* (classic voxlap)
 * runs on very old systems back to OpenGL 1.1 (OpenGL ES support too)
