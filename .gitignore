@@ -13,7 +13,6 @@ Desktop.ini
 *.kv6
 *.lib
 *.dll
-/src/
 /src/ini.c
 /src/ini.h
 /src/lodepng/lodepng.c
