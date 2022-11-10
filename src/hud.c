@@ -468,6 +468,31 @@ static int hud_ingame_onscreencontrol(int index, char* str, int activate) {
 	return 0;
 }
 
+static inline void hud_common_render(mu_Context* ctx) {
+	glColor3f(0.5F, 0.5F, 0.5F);
+	if(settings.bg_tile) {
+		float t = window_time() * settings.bg_tile_speed;
+		texture_draw_sector(
+			&texture_ui_bg,
+			0.0F,
+			settings.window_height,
+			settings.window_width,
+			settings.window_height,
+			t,
+			t,
+			(float) settings.window_width / (float) texture_ui_bg.width,
+			(float) settings.window_height / (float) texture_ui_bg.height
+		);
+	} else {
+		texture_draw(&texture_ui_bg,
+			0.0F,
+			settings.window_height,
+			settings.window_width,
+			settings.window_height
+		);
+	}
+}
+
 static void hud_ingame_render(mu_Context* ctx, float scalex, float scalef) {
 	// window_mousemode(camera_mode==CAMERAMODE_SELECTION?WINDOW_CURSOR_ENABLED:WINDOW_CURSOR_DISABLED);
 	if(show_exit) {
@@ -2142,31 +2167,6 @@ static struct texture* hud_serverlist_ui_images(int icon_id, bool* resize) {
 		case 16: *resize = true; return &texture_ui_join;
 		case 17: *resize = true; return &texture_ui_wait;
 		default: return NULL;
-	}
-}
-
-void hud_common_render(mu_Context* ctx) {
-	glColor3f(0.5F, 0.5F, 0.5F);
-	if(settings.bg_tile) {
-		float t = window_time() * settings.bg_tile_speed;
-		texture_draw_sector(
-			&texture_ui_bg,
-			0.0F,
-			settings.window_height,
-			settings.window_width,
-			settings.window_height,
-			t,
-			t,
-			(float) settings.window_width / (float) texture_ui_bg.width,
-			(float) settings.window_height / (float) texture_ui_bg.height
-		);
-	} else {
-		texture_draw(&texture_ui_bg,
-			0.0F,
-			settings.window_height,
-			settings.window_width,
-			settings.window_height
-		);
 	}
 }
 
