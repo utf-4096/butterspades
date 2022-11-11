@@ -58,7 +58,6 @@ void* compressed_chunk_data;
 int compressed_chunk_data_size;
 int compressed_chunk_data_offset = 0;
 int compressed_chunk_data_estimate = 0;
-double network_last_map_chunk_time = 0;
 
 struct network_stat network_stats[40];
 float network_stats_last = 0.0F;
@@ -106,7 +105,6 @@ void read_PacketMapChunk(void* data, int len) {
 	// accept any chunk length for "superior" performance, as pointed out by github/NotAFile
 	memcpy(compressed_chunk_data + compressed_chunk_data_offset, data, len);
 	compressed_chunk_data_offset += len;
-	network_last_map_chunk_time = window_time();
 }
 
 void read_PacketChatMessage(void* data, int len) {

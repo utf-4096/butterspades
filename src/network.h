@@ -85,7 +85,6 @@ extern void* compressed_chunk_data;
 extern int compressed_chunk_data_size;
 extern int compressed_chunk_data_offset;
 extern int compressed_chunk_data_estimate;
-extern double network_last_map_chunk_time;
 
 extern struct network_stat {
 	int outgoing;

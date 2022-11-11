@@ -570,8 +570,7 @@ static void hud_ingame_render(mu_Context* ctx, float scalex, float scalef) {
 
 	if(network_map_transfer) {
 		hud_common_render(ctx);
-		mu_Color color = mu_accent_color(1.F, 255);
-		glColor3ub(color.r, color.g, color.b);
+		glColor3ub(255, 255, 255);
 
 		texture_draw(&texture_splash_icon,
 			settings.window_width - texture_splash_icon.width - 16.F,
@@ -583,10 +582,6 @@ static void hud_ingame_render(mu_Context* ctx, float scalex, float scalef) {
 		float p = (compressed_chunk_data_estimate > 0) ?
 			((float)compressed_chunk_data_offset / (float)compressed_chunk_data_estimate) :
 			0.0F;
-		float p_last = (compressed_chunk_data_estimate > 0) ?
-			(((float)(compressed_chunk_data_offset) - 10.F) / (float)compressed_chunk_data_estimate) :
-			1.0F;
-
 		glColor3ub(68, 68, 68);
 		texture_draw(&texture_loader, 16.F, texture_white.height / 2 + texture_splash_icon.height / 2, settings.window_width - texture_splash_icon.width - 48.F, texture_white.height);
 		// glColor3ub(
@@ -599,15 +594,13 @@ static void hud_ingame_render(mu_Context* ctx, float scalex, float scalef) {
 		texture_draw(&texture_splash, (settings.window_width - settings.window_height * 4.0F / 3.0F * 0.7F) * 0.5F,
 					 560 * scalef, settings.window_height * 4.0F / 3.0F * 0.7F, settings.window_height * 0.7F);
 
+		mu_Color color = mu_accent_color(1.F, 255);
 		glColor3ub(color.r, color.g, color.b);
 		texture_draw(
 			&texture_loader,
 			16.F,
 			texture_white.height / 2 + texture_splash_icon.height / 2,
-			(
-				(p_last * (settings.window_width - texture_splash_icon.width - 48.F)) * (1.0F - fminf(1.0F, (network_last_map_chunk_time) / window_time())) + 
-				(p * (settings.window_width - texture_splash_icon.width - 48.F)) * fminf(1.0F, (network_last_map_chunk_time + 1.5F) / window_time())
-			),
+			fmin(1.F, p) * (settings.window_width - texture_splash_icon.width - 48.F),
 			texture_white.height
 		);
 
