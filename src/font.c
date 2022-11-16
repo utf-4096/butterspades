@@ -255,11 +255,11 @@ void font_render(float x, float y, float h, char* text) {
 	glMatrixMode(GL_MODELVIEW);
 }
 
-void font_render_shadow(float x, float y, float h, char* text) {
+void font_render_shadow(float x, float y, float h, char* text, float a) {
 	float color[4];
 	glGetFloatv(GL_CURRENT_COLOR, color);
 
-	glColor4f(0.F, 0.F, 0.F, 1.F);
+	glColor4f(0.F, 0.F, 0.F, a);
 	font_render(x, y - 1.F, h, text);
 	font_render(x, y - 2.F, h, text);
 
