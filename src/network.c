@@ -105,7 +105,8 @@ static void printJoinMsg(int team, char* name) {
 		case TEAM_SPECTATOR: t = "Spectator"; break;
 	}
 	char s[64];
-	sprintf(s, "%s joined the %s team", name, t);
+	char team_color = team_color_char(team);
+	sprintf(s, "%c%s\6 joined the %c%s\6 team", team_color, name, team_color, t);
 	chat_add(0, 0x0000FF, s);
 }
 
@@ -423,7 +424,9 @@ void read_PacketPlayerLeft(void* data, int len) {
 		players[p->player_id].alive = 0;
 		players[p->player_id].score = 0;
 		char s[32];
-		sprintf(s, "%s disconnected", players[p->player_id].name);
+		char team_color = team_color_char(players[p->player_id].team);
+
+		sprintf(s, "%c%s\6 disconnected", team_color, players[p->player_id].name);
 		chat_add(0, 0x0000FF, s);
 	}
 }
@@ -736,11 +739,11 @@ void read_PacketIntelCapture(void* data, int len) {
 		switch(players[p->player_id].team) {
 			case TEAM_1:
 				gamestate.gamemode.ctf.team_1_score++;
-				sprintf(capture_str, "%s has captured the %s Intel", players[p->player_id].name, gamestate.team_2.name);
+				sprintf(capture_str, "\1%s\6 has captured the \2%s\6 Intel", players[p->player_id].name, gamestate.team_2.name);
 				break;
 			case TEAM_2:
 				gamestate.gamemode.ctf.team_2_score++;
-				sprintf(capture_str, "%s has captured the %s Intel", players[p->player_id].name, gamestate.team_1.name);
+				sprintf(capture_str, "\2%s\6 has captured the \1%s\6 Intel", players[p->player_id].name, gamestate.team_1.name);
 				break;
 		}
 		sound_create(SOUND_LOCAL, p->winning ? &sound_horn : &sound_pickup, 0.0F, 0.0F, 0.0F);
@@ -773,14 +776,14 @@ void read_PacketIntelDrop(void* data, int len) {
 				gamestate.gamemode.ctf.team_2_intel_location.dropped.x = p->x;
 				gamestate.gamemode.ctf.team_2_intel_location.dropped.y = p->y;
 				gamestate.gamemode.ctf.team_2_intel_location.dropped.z = p->z;
-				sprintf(drop_str, "%s has dropped the %s Intel", players[p->player_id].name, gamestate.team_2.name);
+				sprintf(drop_str, "\1%s\6 has dropped the \2%s\6 Intel", players[p->player_id].name, gamestate.team_2.name);
 				break;
 			case TEAM_2:
 				gamestate.gamemode.ctf.team_1_intel = 0;
 				gamestate.gamemode.ctf.team_1_intel_location.dropped.x = p->x;
 				gamestate.gamemode.ctf.team_1_intel_location.dropped.y = p->y;
 				gamestate.gamemode.ctf.team_1_intel_location.dropped.z = p->z;
-				sprintf(drop_str, "%s has dropped the %s Intel", players[p->player_id].name, gamestate.team_1.name);
+				sprintf(drop_str, "\2%s\6 has dropped the \1%s\6 Intel", players[p->player_id].name, gamestate.team_1.name);
 				break;
 		}
 		chat_add(0, 0x0000FF, drop_str);
@@ -795,12 +798,12 @@ void read_PacketIntelPickup(void* data, int len) {
 			case TEAM_1:
 				gamestate.gamemode.ctf.team_2_intel = 1; // pickup opposing team's intel
 				gamestate.gamemode.ctf.team_2_intel_location.held.player_id = p->player_id;
-				sprintf(pickup_str, "%s has the %s Intel", players[p->player_id].name, gamestate.team_2.name);
+				sprintf(pickup_str, "\1%s\6 has the \2%s\6 Intel", players[p->player_id].name, gamestate.team_2.name);
 				break;
 			case TEAM_2:
 				gamestate.gamemode.ctf.team_1_intel = 1;
 				gamestate.gamemode.ctf.team_1_intel_location.held.player_id = p->player_id;
-				sprintf(pickup_str, "%s has the %s Intel", players[p->player_id].name, gamestate.team_1.name);
+				sprintf(pickup_str, "\2%s\6 has the \1%s\6 Intel", players[p->player_id].name, gamestate.team_1.name);
 				break;
 		}
 		chat_add(0, 0x0000FF, pickup_str);
@@ -822,7 +825,9 @@ void read_PacketTerritoryCapture(void* data, int len) {
 			case TEAM_2: team_n = gamestate.team_2.name; break;
 		}
 		if(team_n) {
-			sprintf(capture_str, "%s have captured %c%c", team_n, x, y);
+			char team_color = team_color_char(p->team);
+
+			sprintf(capture_str, "%c%s\6 have captured %c%c", team_color, team_n, x, y);
 			chat_add(0, 0x0000FF, capture_str);
 			if(p->winning) {
 				sprintf(capture_str, "%s Team Wins!", team_n);
