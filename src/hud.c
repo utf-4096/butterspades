@@ -501,9 +501,9 @@ static inline void hud_texture_draw(struct texture* t, float x, float y, float w
 	}
 }
 
-static inline void hud_font_render(float x, float y, float h, char* text) {
+static inline void hud_font_render(float x, float y, float h, char* text, float a) {
 	if(settings.hud_shadows) {
-		font_render_shadow(x, y, h, text);
+		font_render_shadow(x, y, h, text, a);
 	} else {
 		font_render(x, y, h, text);
 	}
@@ -529,10 +529,10 @@ static void hud_render_message(unsigned int channel, unsigned int k) {
 		single[1] = '\0';
 
 		if(channel == 0) {
-			hud_font_render(11.0F + l - font_length(11.0F, c), settings.window_height * 0.2F - 10.0F * k - k * 8.F, 8.0F, single);
+			hud_font_render(11.0F + l - font_length(11.0F, c), settings.window_height * 0.2F - 10.0F * k - k * 8.F, 8.0F, single, 0.F);
 		} else if(channel == 1) {
 			hud_font_render(11.0F + l - font_length(11.0F, c), settings.window_height - 22.0F - 10.0F * k - k * 8.F,
-						8.0F, single);
+						8.0F, single, 0.25F);
 		}
 	}
 }
@@ -844,7 +844,7 @@ static void hud_ingame_render(mu_Context* ctx, float scalex, float scalef) {
 			char hp[4];
 			sprintf(hp, "%i", health);
 			hud_texture_draw(&texture_health, 8.F, 40.F, 36.0F, 32.F);
-			hud_font_render(48.F, 38.F, 30.F, hp);
+			hud_font_render(48.F, 38.F, 30.F, hp, 1.F);
 
 			char item_mini_str[32];
 			struct texture* item_mini;
@@ -879,7 +879,7 @@ static void hud_ingame_render(mu_Context* ctx, float scalex, float scalef) {
 			}
 
 			hud_texture_draw(item_mini, settings.window_width - texture_health.width - 8.F, item_mini->height + 8.F, texture_health.width, texture_health.height);
-			hud_font_render(settings.window_width - texture_health.width - 12.F - font_length(30.F, item_mini_str), 37.F, 30.F, item_mini_str);
+			hud_font_render(settings.window_width - texture_health.width - 12.F - font_length(30.F, item_mini_str), 37.F, 30.F, item_mini_str, 1.F);
 			font_select(FONT_FIXEDSYS);
 			glColor3f(1.0F, 1.0F, 1.0F);
 
@@ -1895,8 +1895,15 @@ static void hud_ingame_keyboard(int key, int action, int mods, int internal) {
 				if(clipboard)
 					strcat(chat[0][0], clipboard);
 			}
+			if(key == WINDOW_KEY_UP && chat_history_pos < 9) {
+				strcpy(chat[0][0], chat[2][++chat_history_pos]);
+			}
+			if(key == WINDOW_KEY_DOWN && chat_history_pos> 0) {
+				strcpy(chat[0][0], chat[2][--chat_history_pos]);
+			}
 			if(key == WINDOW_KEY_ESCAPE || key == WINDOW_KEY_ENTER) {
 				if(key == WINDOW_KEY_ENTER && strlen(chat[0][0]) > 0) {
+					chat_history_pos = 0;
 					struct PacketChatMessage msg;
 					msg.player_id = local_player_id;
 					msg.chat_type = (chat_input_mode == CHAT_ALL_INPUT) ? CHAT_ALL : CHAT_TEAM;
@@ -1904,6 +1911,7 @@ static void hud_ingame_keyboard(int key, int action, int mods, int internal) {
 					network_send(PACKET_CHATMESSAGE_ID, &msg,
 								 sizeof(msg) - sizeof(msg.message) + strlen(chat[0][0]) + 1);
 					sound_create(SOUND_LOCAL, &sound_chat, 0.0F, 0.0F, 0.0F);
+					chat_add(2, 0, chat[0][0]);
 				}
 				window_textinput(0);
 				chat_input_mode = CHAT_NO_INPUT;

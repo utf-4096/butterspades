@@ -103,9 +103,10 @@ extern float last_cy;
 
 extern int fps;
 
-extern char chat[2][10][256];
-extern unsigned int chat_color[2][10];
-extern float chat_timer[2][10];
+extern char chat[3][10][256];
+extern unsigned int chat_color[3][10];
+extern float chat_timer[3][10];
+extern unsigned int chat_history_pos;
 extern char chat_popup[256];
 extern float chat_popup_timer;
 extern float chat_popup_duration;
