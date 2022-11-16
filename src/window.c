@@ -231,8 +231,9 @@ void window_init() {
 	glfwSetScrollCallback(hud_window->impl, window_impl_mousescroll);
 	glfwSetCharCallback(hud_window->impl, window_impl_textinput);
 
-	if(glfwRawMouseMotionSupported())
-		glfwSetInputMode(hud_window->impl, GLFW_RAW_MOUSE_MOTION, GLFW_TRUE);
+	// This causes weird jumping issues, not sure why
+	// if(glfwRawMouseMotionSupported())
+	// 	glfwSetInputMode(hud_window->impl, GLFW_RAW_MOUSE_MOTION, GLFW_TRUE);
 }
 
 void window_fromsettings() {
