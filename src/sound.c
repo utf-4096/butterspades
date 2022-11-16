@@ -86,6 +86,7 @@ struct Sound_wav sound_spade_whack;
 struct Sound_wav sound_death;
 struct Sound_wav sound_beep1;
 struct Sound_wav sound_beep2;
+struct Sound_wav sound_chat;
 struct Sound_wav sound_switch;
 struct Sound_wav sound_empty;
 struct Sound_wav sound_intro;
@@ -309,6 +310,7 @@ void sound_init() {
 	sound_load(&sound_death, "wav/death.wav", 0.1F, 24.0F);
 	sound_load(&sound_beep1, "wav/beep1.wav", 0.1F, 1024.0F);
 	sound_load(&sound_beep2, "wav/beep2.wav", 0.1F, 1024.0F);
+	sound_load(&sound_chat, "wav/chat.wav", 0.1F, 1024.0F);
 	sound_load(&sound_switch, "wav/switch.wav", 0.1F, 1024.0F);
 	sound_load(&sound_empty, "wav/empty.wav", 0.1F, 1024.0F);
 	sound_load(&sound_intro, "wav/intro.wav", 0.1F, 1024.0F);

@@ -90,6 +90,7 @@ extern struct Sound_wav sound_spade_whack;
 extern struct Sound_wav sound_death;
 extern struct Sound_wav sound_beep1;
 extern struct Sound_wav sound_beep2;
+extern struct Sound_wav sound_chat;
 extern struct Sound_wav sound_switch;
 extern struct Sound_wav sound_empty;
 extern struct Sound_wav sound_intro;
