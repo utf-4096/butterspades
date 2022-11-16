@@ -255,6 +255,18 @@ void font_render(float x, float y, float h, char* text) {
 	glMatrixMode(GL_MODELVIEW);
 }
 
+void font_render_shadow(float x, float y, float h, char* text) {
+	float color[4];
+	glGetFloatv(GL_CURRENT_COLOR, color);
+
+	glColor4f(0.F, 0.F, 0.F, 1.F);
+	font_render(x, y - 1.F, h, text);
+	font_render(x, y - 2.F, h, text);
+
+	glColor4f(color[0], color[1], color[2], color[3]);
+	font_render(x, y, h, text);
+}
+
 void font_centered(float x, float y, float h, char* text) {
 	font_render(x - font_length(h, text) / 2.0F, y, h, text);
 }

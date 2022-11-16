@@ -67,6 +67,20 @@ ENetPeer* peer;
 
 char network_custom_reason[17];
 
+void network_init_host() {
+	client = enet_host_create(NULL, 1, 1, 0, 0); // limit bandwidth here if you want to
+	enet_host_compress_with_range_coder(client);
+}
+
+static inline char team_color_char(int team) {
+	switch(team) {
+		case TEAM_1: return '\1'; break;
+		case TEAM_2: return '\2'; break;
+		case TEAM_SPECTATOR: return '\3'; break;
+		default: return '\6'; break;
+	}
+} 
+
 const char* network_reason_disconnect(int code) {
 	if(*network_custom_reason)
 		return network_custom_reason;
@@ -129,14 +143,17 @@ void read_PacketChatMessage(void* data, int len) {
 		case CHAT_ALL:
 		case CHAT_TEAM:
 			if(p->player_id < PLAYERS_MAX && players[p->player_id].connected) {
-				switch(players[p->player_id].team) {
-					case TEAM_1: sprintf(n, "%s (%s)", players[p->player_id].name, gamestate.team_1.name); break;
-					case TEAM_2: sprintf(n, "%s (%s)", players[p->player_id].name, gamestate.team_2.name); break;
-					case TEAM_SPECTATOR: sprintf(n, "%s (Spectator)", players[p->player_id].name); break;
+				strncpy(n, players[p->player_id].name, 32);
+
+				char color = team_color_char(players[p->player_id].team);
+
+				if(p->chat_type == CHAT_ALL) {
+					sprintf(m, "[Global] %c%s\6: ", color, n);
+				} else {
+					sprintf(m, "%c%s\6: ", color, n);
 				}
-				sprintf(m, "%s: ", n);
 			} else {
-				sprintf(m, ": ");
+				m[0] = 0;
 			}
 			break;
 	}
@@ -150,17 +167,16 @@ void read_PacketChatMessage(void* data, int len) {
 
 	unsigned int color;
 	switch(p->chat_type) {
-		case CHAT_SYSTEM: color = 0x0000FF; break;
+		case CHAT_ALL:
 		case CHAT_TEAM:
 			switch(players[p->player_id].connected ? players[p->player_id].team : players[local_player_id].team) {
 				case TEAM_1: color = rgb(gamestate.team_1.red, gamestate.team_1.green, gamestate.team_1.blue); break;
 				case TEAM_2: color = rgb(gamestate.team_2.red, gamestate.team_2.green, gamestate.team_2.blue); break;
-				case TEAM_SPECTATOR:
+				case TEAM_SPECTATOR: color = rgb(255, 255, 255); break;
 				default: color = rgb(0, 0, 0); break;
 			}
 			break;
-		default:
-		case CHAT_ALL: color = 0xFFFFFF; break;
+		default: color = 0xFFFFFF; break;
 	}
 	chat_add(0, color, m);
 }
@@ -575,23 +591,26 @@ void read_PacketKillAction(void* data, int len) {
 		}
 		char* gun_name[3] = {"Rifle", "SMG", "Shotgun"};
 		char m[256];
+
+		char color_killer = team_color_char(players[p->killer_id].team);
+		char color_dead = team_color_char(players[p->player_id].team);
 		switch(p->kill_type) {
 			case KILLTYPE_WEAPON:
-				sprintf(m, "%s killed %s (%s)", players[p->killer_id].name, players[p->player_id].name,
+				sprintf(m, "%c%s\6 killed %c%s\6 (%s)", color_killer, players[p->killer_id].name, color_dead, players[p->player_id].name,
 						gun_name[players[p->killer_id].weapon]);
 				break;
 			case KILLTYPE_HEADSHOT:
-				sprintf(m, "%s killed %s (Headshot)", players[p->killer_id].name, players[p->player_id].name);
+				sprintf(m, "%c%s\6 killed %c%s\6 (%s Headshot)", color_killer, players[p->killer_id].name, color_dead, players[p->player_id].name, gun_name[players[p->killer_id].weapon]);
 				break;
 			case KILLTYPE_MELEE:
-				sprintf(m, "%s killed %s (Spade)", players[p->killer_id].name, players[p->player_id].name);
+				sprintf(m, "%c%s\6 killed %c%s\6 (Spade)", color_killer, players[p->killer_id].name, color_dead, players[p->player_id].name);
 				break;
 			case KILLTYPE_GRENADE:
-				sprintf(m, "%s killed %s (Grenade)", players[p->killer_id].name, players[p->player_id].name);
+				sprintf(m, "%c%s\6 killed %c%s\6 (Grenade)", color_killer, players[p->killer_id].name, color_dead, players[p->player_id].name);
 				break;
-			case KILLTYPE_FALL: sprintf(m, "%s fell too far", players[p->player_id].name); break;
-			case KILLTYPE_TEAMCHANGE: sprintf(m, "%s changed teams", players[p->player_id].name); break;
-			case KILLTYPE_CLASSCHANGE: sprintf(m, "%s changed weapons", players[p->player_id].name); break;
+			case KILLTYPE_FALL: sprintf(m, "%c%s\6 fell too far", color_dead, players[p->player_id].name); break;
+			case KILLTYPE_TEAMCHANGE: sprintf(m, "%c%s\6 changed teams", color_dead, players[p->player_id].name); break;
+			case KILLTYPE_CLASSCHANGE: sprintf(m, "%c%s\6 changed weapons", color_dead, players[p->player_id].name); break;
 		}
 		if(p->killer_id == local_player_id || p->player_id == local_player_id) {
 			chat_add(1, 0x0000FF, m);
@@ -945,17 +964,21 @@ void network_disconnect() {
 		while(enet_host_service(client, &event, 3000) > 0) {
 			switch(event.type) {
 				case ENET_EVENT_TYPE_RECEIVE: enet_packet_destroy(event.packet); break;
-				case ENET_EVENT_TYPE_DISCONNECT: return;
+				case ENET_EVENT_TYPE_DISCONNECT:
+					enet_host_destroy(client);
+				return;
 			}
 		}
 
 		enet_peer_reset(peer);
+		enet_host_destroy(client);
 	}
 }
 
 int network_connect_sub(char* ip, int port, int version) {
 	ENetAddress address;
 	ENetEvent event;
+	network_init_host();
 	enet_address_set_host(&address, ip);
 	address.port = port;
 	peer = enet_host_connect(client, &address, 1, version);

@@ -201,6 +201,18 @@ void texture_draw(struct texture* t, float x, float y, float w, float h) {
 	glDisable(GL_TEXTURE_2D);
 }
 
+void texture_draw_shadow(struct texture* t, float x, float y, float w, float h) {
+	float color[4];
+	glGetFloatv(GL_CURRENT_COLOR, color);
+
+	glColor4f(0.F, 0.F, 0.F, 1.F);
+	texture_draw(t, x, y - 1.F, w, h);
+	texture_draw(t, x, y - 2.F, w, h);
+
+	glColor4f(color[0], color[1], color[2], color[3]);
+	texture_draw(t, x, y, w, h);
+}
+
 void texture_draw_rotated(struct texture* t, float x, float y, float w, float h, float angle) {
 	glEnable(GL_TEXTURE_2D);
 	glEnable(GL_BLEND);

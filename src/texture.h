@@ -78,6 +78,7 @@ int texture_create(struct texture* t, char* filename);
 int texture_create_buffer(struct texture* t, int width, int height, unsigned char* buff, int new);
 void texture_delete(struct texture* t);
 void texture_draw(struct texture* t, float x, float y, float w, float h);
+void texture_draw_shadow(struct texture* t, float x, float y, float w, float h);
 void texture_draw_sector(struct texture* t, float x, float y, float w, float h, float u, float v, float us, float vs);
 void texture_draw_empty(float x, float y, float w, float h);
 void texture_draw_empty_rotated(float x, float y, float w, float h, float angle);
