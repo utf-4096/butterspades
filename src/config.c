@@ -75,9 +75,10 @@ void config_save() {
 	config_seti("client", "windowed", !settings.fullscreen);
 	config_seti("client", "bg_tile", settings.bg_tile);
 	config_setf("client", "bg_tile_speed", settings.bg_tile_speed);
-	config_setf("client", "ui_accent_r", settings.ui_accent_r);
-	config_setf("client", "ui_accent_g", settings.ui_accent_g);
-	config_setf("client", "ui_accent_b", settings.ui_accent_b);
+	config_seti("client", "ui_accent_r", settings.ui_accent_r);
+	config_seti("client", "ui_accent_g", settings.ui_accent_g);
+	config_seti("client", "ui_accent_b", settings.ui_accent_b);
+	config_setf("client", "hud_shadows", settings.hud_shadows);
 	config_seti("client", "multisamples", settings.multisamples);
 	config_seti("client", "greedy_meshing", settings.greedy_meshing);
 	config_seti("client", "vsync", settings.vsync);
@@ -180,6 +181,8 @@ static int config_read_key(void* user, const char* section, const char* name, co
 			settings.ui_accent_g = max(0, min(255, atoi(value)));
 		} else if(!strcmp(name, "ui_accent_b")) {
 			settings.ui_accent_b = max(0, min(255, atoi(value)));
+		} else if(!strcmp(name, "hud_shadows")) {
+			settings.hud_shadows = atoi(value);
 		}
 	}
 	if(!strcmp(section, "controls")) {
@@ -548,6 +551,14 @@ void config_reload() {
 				 .min = 0,
 				 .max = 255,
 				 .name = "UI Accent: Blue",
+			 });
+	list_add(&config_settings,
+			 &(struct config_setting) {
+				 .value = &settings_tmp.hud_shadows,
+				 .type = CONFIG_TYPE_INT,
+				 .min = 0,
+				 .max = 1,
+				 .name = "HUD shadows",
 			 });
 	list_add(&config_settings,
 			 &(struct config_setting) {
