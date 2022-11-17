@@ -1907,10 +1907,14 @@ static void hud_ingame_keyboard(int key, int action, int mods, int internal) {
 				if(clipboard)
 					strcat(chat[0][0], clipboard);
 			}
-			if(key == WINDOW_KEY_UP && chat_history_pos < 127) {
+
+			// Arrow up
+			if(key == WINDOW_KEY_HISTORY_PREVIOUS && chat_history_pos < 127) {
 				strcpy(chat[0][0], chat[2][++chat_history_pos]);
 			}
-			if(key == WINDOW_KEY_DOWN && chat_history_pos> 0) {
+
+			// Arrow down
+			if(key == WINDOW_KEY_HISTORY_NEXT && chat_history_pos> 0) {
 				strcpy(chat[0][0], chat[2][--chat_history_pos]);
 			}
 			if(key == WINDOW_KEY_ESCAPE || key == WINDOW_KEY_ENTER) {

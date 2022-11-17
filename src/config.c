@@ -356,6 +356,8 @@ void config_reload() {
 	config_register_key(WINDOW_KEY_SELECT1, SDLK_1, NULL, 0, NULL, NULL);
 	config_register_key(WINDOW_KEY_SELECT2, SDLK_2, NULL, 0, NULL, NULL);
 	config_register_key(WINDOW_KEY_SELECT3, SDLK_3, NULL, 0, NULL, NULL);
+	config_register_key(WINDOW_KEY_HISTORY_PREVIOUS, SDLK_UP, "history_previous", 0, "Previous message", "Chat history");
+	config_register_key(WINDOW_KEY_HISTORY_NEXT, SDLK_DOWN, "history_next", 0, "Next message", "Chat history");
 #endif
 
 #ifdef USE_GLFW
@@ -406,6 +408,8 @@ void config_reload() {
 	config_register_key(WINDOW_KEY_SELECT1, GLFW_KEY_1, NULL, 0, NULL, NULL);
 	config_register_key(WINDOW_KEY_SELECT2, GLFW_KEY_2, NULL, 0, NULL, NULL);
 	config_register_key(WINDOW_KEY_SELECT3, GLFW_KEY_3, NULL, 0, NULL, NULL);
+	config_register_key(WINDOW_KEY_HISTORY_PREVIOUS, GLFW_KEY_UP, "history_previous", 0, "Previous message", "Chat history");
+	config_register_key(WINDOW_KEY_HISTORY_NEXT, GLFW_KEY_DOWN, "history_next", 0, "Next message", "Chat history");
 #endif
 
 	list_sort(&config_keys, config_key_cmp);
