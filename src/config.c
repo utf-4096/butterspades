@@ -94,6 +94,7 @@ void config_save() {
 	config_setf("client", "camera_fov", settings.camera_fov);
 	config_seti("client", "hold_down_sights", settings.hold_down_sights);
 	config_seti("client", "chat_shadow", settings.chat_shadow);
+	config_seti("client", "chat_flip_on_open", settings.chat_flip_on_open);
 	config_seti("client", "show_player_arms", settings.player_arms);
 
 	for(int k = 0; k < list_size(&config_keys); k++) {
@@ -167,6 +168,8 @@ static int config_read_key(void* user, const char* section, const char* name, co
 			settings.hold_down_sights = atoi(value);
 		} else if(!strcmp(name, "chat_shadow")) {
 			settings.chat_shadow = atoi(value);
+		}  else if(!strcmp(name, "chat_flip_on_open")) {
+			settings.chat_flip_on_open = atoi(value);
 		} else if(!strcmp(name, "show_player_arms")) {
 			settings.player_arms = atoi(value);
 		} else if(!strcmp(name, "last_address")) {
@@ -584,6 +587,15 @@ void config_reload() {
 				 .max = 1,
 				 .help = "Dark chat background",
 				 .name = "Chat shadow",
+			 });
+	list_add(&config_settings,
+			 &(struct config_setting) {
+				 .value = &settings_tmp.chat_flip_on_open,
+				 .type = CONFIG_TYPE_INT,
+				 .min = 0,
+				 .max = 1,
+				 .help = "Flip chat order when open",
+				 .name = "Reverse chat on open",
 			 });
 	list_add(&config_settings,
 			 &(struct config_setting) {

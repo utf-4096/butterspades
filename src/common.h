@@ -112,6 +112,7 @@ extern float chat_popup_timer;
 extern float chat_popup_duration;
 extern int chat_popup_color;
 void chat_add(int channel, unsigned int color, const char* msg);
+void chat_clear(int channel);
 void chat_showpopup(const char* msg, float duration, int color);
 const char* reason_disconnect(int code);
 

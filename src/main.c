@@ -74,6 +74,15 @@ void chat_add(int channel, unsigned int color, const char* msg) {
 	if(channel == 0)
 		log_info("%s", msg);
 }
+
+void chat_clear(int channel) {
+	for(int k = 127; k > 1; k--) {
+		chat[channel][k][0] = '\0';
+		chat_color[channel][k] = 0x000000;
+		chat_timer[channel][k] = 0;
+	}
+}
+
 char chat_popup[256] = {};
 int chat_popup_color;
 float chat_popup_timer = 0.0F;

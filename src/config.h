@@ -62,6 +62,7 @@ extern struct RENDER_OPTIONS {
 	float camera_fov;
 	int hold_down_sights;
 	int chat_shadow;
+	int chat_flip_on_open;
 } settings, settings_tmp;
 
 extern struct list config_keys;

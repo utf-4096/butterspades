@@ -531,7 +531,11 @@ static void hud_render_message(unsigned int channel, unsigned int k) {
 		single[1] = '\0';
 
 		if(channel == 0) {
-			hud_font_render(11.0F + l - font_length(11.0F, c), 72.F + ((chat_messages - k + 1.F) * 16.F), 8.0F, single, 0.F);
+			if(chat_input_mode != CHAT_NO_INPUT) {
+				hud_font_render(11.0F + l - font_length(11.0F, c), 72.F + ((k + 2.F) * 16.F), 8.0F, single, 0.F);
+			} else {
+				hud_font_render(11.0F + l - font_length(11.0F, c), 72.F + ((chat_messages - k + 1.F) * 16.F), 8.0F, single, 0.F);
+			}
 		} else if(channel == 1) {
 			hud_font_render(11.0F + l - font_length(11.0F, c), settings.window_height - 22.0F - 10.0F * k - k * 8.F,
 						8.0F, single, 0.25F);
@@ -2177,6 +2181,8 @@ static void hud_serverlist_pingupdate(void* e, float time_delta, char* aos) {
 }
 
 static void server_c(char* address, char* name) {
+	chat_clear(0);
+
 	if(file_exists(address)) {
 		void* data = file_load(address);
 		map_vxl_load(data, file_size(address));
