@@ -57,13 +57,13 @@ int ms_rand() {
 
 int chat_input_mode = CHAT_NO_INPUT;
 
-char chat[3][10][256] = {0}; // chat[0] is current input
+char chat[3][128][256] = {0}; // chat[0] is current input
                              // chat[2] is history
-unsigned int chat_color[3][10];
-float chat_timer[3][10];
+unsigned int chat_color[3][128];
+float chat_timer[3][128];
 unsigned int chat_history_pos;
 void chat_add(int channel, unsigned int color, const char* msg) {
-	for(int k = 9; k > 1; k--) {
+	for(int k = 127; k > 1; k--) {
 		strcpy(chat[channel][k], chat[channel][k - 1]);
 		chat_color[channel][k] = chat_color[channel][k - 1];
 		chat_timer[channel][k] = chat_timer[channel][k - 1];

@@ -509,6 +509,8 @@ static inline void hud_font_render(float x, float y, float h, char* text, float 
 	}
 }
 
+static int chat_messages = 16;
+
 static void hud_render_message(unsigned int channel, unsigned int k) {
 	char *c;
 	float l = font_length(11.F, chat[channel][k + 1]);
@@ -529,13 +531,14 @@ static void hud_render_message(unsigned int channel, unsigned int k) {
 		single[1] = '\0';
 
 		if(channel == 0) {
-			hud_font_render(11.0F + l - font_length(11.0F, c), settings.window_height * 0.2F - 10.0F * k - k * 8.F, 8.0F, single, 0.F);
+			hud_font_render(11.0F + l - font_length(11.0F, c), 72.F + ((chat_messages - k + 1.F) * 16.F), 8.0F, single, 0.F);
 		} else if(channel == 1) {
 			hud_font_render(11.0F + l - font_length(11.0F, c), settings.window_height - 22.0F - 10.0F * k - k * 8.F,
 						8.0F, single, 0.25F);
 		}
 	}
 }
+
 
 static void hud_ingame_render(mu_Context* ctx, float scalex, float scalef) {
 	// window_mousemode(camera_mode==CAMERAMODE_SELECTION?WINDOW_CURSOR_ENABLED:WINDOW_CURSOR_DISABLED);
@@ -908,7 +911,7 @@ static void hud_ingame_render(mu_Context* ctx, float scalex, float scalef) {
 			if(settings.chat_shadow) {
 				float chat_width = 0;
 				int chat_height = 0;
-				for(int k = 0; k < 6; k++) {
+				for(int k = 0; k < chat_messages; k++) {
 					if((window_time() - chat_timer[0][k + 1] < 10.0F || chat_input_mode != CHAT_NO_INPUT)
 					   && strlen(chat[0][k + 1]) > 0) {
 						chat_width = fmaxf(font_length(8.0F * scalef, chat[0][k + 1]), chat_width);
@@ -917,8 +920,11 @@ static void hud_ingame_render(mu_Context* ctx, float scalex, float scalef) {
 				}
 
 				if(chat_input_mode != CHAT_NO_INPUT) {
-					chat_height += 2;
-					chat_width = fmaxf(settings.window_width / 2.0F, chat_width);
+					chat_width = fminf(1024.F, settings.window_width) - 3.F - 20.F;
+					chat_messages = min(127, floor((settings.window_height - 128.F) / 16.F));
+					chat_height = chat_messages;
+				} else {
+					chat_messages = 12;
 				}
 
 				if(chat_height > 0) {
@@ -926,11 +932,13 @@ static void hud_ingame_render(mu_Context* ctx, float scalex, float scalef) {
 					glEnable(GL_BLEND);
 					glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 					if(chat_input_mode == CHAT_NO_INPUT) {
-						texture_draw_empty(3.0F, settings.window_height * 0.2F + 6.0F + 8.F,
-										   chat_width + 16.0F, 18.0F * chat_height + 12.0F);
+						texture_draw_empty(3.0F, 69.F + (chat_messages + 2.F) * 16.F,
+										   chat_width + 16.0F, 16.0F * chat_height + 12.0F);
 					} else {
-						texture_draw_empty(3.0F, settings.window_height * 0.2F + 26.0F + 24.F,
-										   chat_width + 16.0F, 18.0F * chat_height + 12.0F);
+						texture_draw_empty(3.0F, 69.F + (chat_messages + 2.F) * 16.F,
+										   chat_width + 16.0F, 16.0F * chat_height + 12.0F);
+
+						texture_draw_empty(3.0F, 90.F, chat_width + 16.0F, 42.F);
 					}
 					glDisable(GL_BLEND);
 				}
@@ -941,22 +949,22 @@ static void hud_ingame_render(mu_Context* ctx, float scalex, float scalef) {
 			if(chat_input_mode != CHAT_NO_INPUT) {
 				switch(chat_input_mode) {
 					case CHAT_ALL_INPUT:
-						font_render(11.0F, settings.window_height * 0.2F + 28.0F + 8.F, 8.0F,
+						font_render(11.0F, 78.F, 8.0F,
 									"Global:");
 						break;
 					case CHAT_TEAM_INPUT:
-						font_render(11.0F, settings.window_height * 0.2F + 28.0F + 8.F, 8.0F,
+						font_render(11.0F, 78.F, 8.0F,
 									"Team:");
 						break;
 				}
 				int l = strlen(chat[0][0]);
 				chat[0][0][l] = '_';
 				chat[0][0][l + 1] = 0;
-				font_render(11.0F, settings.window_height * 0.2F + 15.0F + 4.F, 8.0F, chat[0][0]);
+				font_render(11.0F, 64.F, 8.0F, chat[0][0]);
 				chat[0][0][l] = 0;
 			}
 
-			for(int k = 0; k < 6; k++) {
+			for(int k = 0; k < chat_messages; k++) {
 				glColor3ub(255, 255, 255);
 				if(window_time() - chat_timer[0][k + 1] < 10.0F || chat_input_mode != CHAT_NO_INPUT) {
 					hud_render_message(0, k);
@@ -1895,15 +1903,15 @@ static void hud_ingame_keyboard(int key, int action, int mods, int internal) {
 				if(clipboard)
 					strcat(chat[0][0], clipboard);
 			}
-			if(key == WINDOW_KEY_UP && chat_history_pos < 9) {
+			if(key == WINDOW_KEY_UP && chat_history_pos < 127) {
 				strcpy(chat[0][0], chat[2][++chat_history_pos]);
 			}
 			if(key == WINDOW_KEY_DOWN && chat_history_pos> 0) {
 				strcpy(chat[0][0], chat[2][--chat_history_pos]);
 			}
 			if(key == WINDOW_KEY_ESCAPE || key == WINDOW_KEY_ENTER) {
+				chat_history_pos = 0;
 				if(key == WINDOW_KEY_ENTER && strlen(chat[0][0]) > 0) {
-					chat_history_pos = 0;
 					struct PacketChatMessage msg;
 					msg.player_id = local_player_id;
 					msg.chat_type = (chat_input_mode == CHAT_ALL_INPUT) ? CHAT_ALL : CHAT_TEAM;
