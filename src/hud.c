@@ -563,6 +563,7 @@ static void hud_ingame_render(mu_Context* ctx, float scalex, float scalef) {
 		&& (screen_current == SCREEN_NONE || camera_mode != CAMERAMODE_FPS);
 
 	if(cameracontroller_yclamp) {
+		glColor3f(1.0F, 1.0F, 1.0F);
 		hud_font_render(8.F, settings.window_height / 2 - 4.F, 8.0F, "Y-Clamp enabled", .5f);
 	}
 
