@@ -562,6 +562,10 @@ static void hud_ingame_render(mu_Context* ctx, float scalex, float scalef) {
 	hud_active->render_localplayer = players[local_player_id].team != TEAM_SPECTATOR
 		&& (screen_current == SCREEN_NONE || camera_mode != CAMERAMODE_FPS);
 
+	if(cameracontroller_yclamp) {
+		hud_font_render(8.F, settings.window_height / 2 - 4.F, 8.0F, "Y-Clamp enabled", .5f);
+	}
+
 	if(window_key_down(WINDOW_KEY_NETWORKSTATS)) {
 		if(network_map_transfer)
 			glColor3f(1.0F, 1.0F, 1.0F);
@@ -1869,6 +1873,10 @@ static void hud_ingame_keyboard(int key, int action, int mods, int internal) {
 
 				window_mousemode(show_exit ? WINDOW_CURSOR_ENABLED : WINDOW_CURSOR_DISABLED);
 				return;
+			}
+
+			if(players[local_player_id].team == TEAM_SPECTATOR && key == WINDOW_KEY_YCLAMP) {
+				cameracontroller_yclamp ^= 1;
 			}
 
 			if(key == WINDOW_KEY_PICKCOLOR && players[local_player_id].held_item == TOOL_BLOCK) {

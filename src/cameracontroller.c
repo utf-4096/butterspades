@@ -29,6 +29,7 @@
 
 int cameracontroller_bodyview_mode = 0;
 int cameracontroller_bodyview_player = 0;
+int cameracontroller_yclamp = 0;
 float cameracontroller_bodyview_zoom = 0.0F;
 
 float cameracontroller_death_velocity_x, cameracontroller_death_velocity_y, cameracontroller_death_velocity_z;
@@ -201,12 +202,16 @@ void cameracontroller_spectator(float dt) {
 	if(chat_input_mode == CHAT_NO_INPUT) {
 		if(window_key_down(WINDOW_KEY_UP)) {
 			x += sin(camera_rot_x) * sin(camera_rot_y);
-			y += cos(camera_rot_y);
+			if(!cameracontroller_yclamp) {
+				y += cos(camera_rot_y);
+			}
 			z += cos(camera_rot_x) * sin(camera_rot_y);
 		} else {
 			if(window_key_down(WINDOW_KEY_DOWN)) {
 				x -= sin(camera_rot_x) * sin(camera_rot_y);
-				y -= cos(camera_rot_y);
+				if(!cameracontroller_yclamp) {
+					y -= cos(camera_rot_y);
+				}
 				z -= cos(camera_rot_x) * sin(camera_rot_y);
 			}
 		}
