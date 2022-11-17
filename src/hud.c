@@ -138,7 +138,6 @@ int show_exit = 0;
 static void hud_ingame_init() {
 	window_textinput(0);
 	chat_input_mode = CHAT_NO_INPUT;
-	show_exit = 0;
 	window_mousemode(WINDOW_CURSOR_DISABLED);
 }
 
@@ -469,6 +468,19 @@ static int hud_ingame_onscreencontrol(int index, char* str, int activate) {
 }
 
 static inline void hud_common_render(mu_Context* ctx) {
+	// Ingame menu
+	if(network_connected && !network_map_transfer) {
+		glColor3f(0.2F, 0.2F, 0.2F);
+		texture_draw_empty(0, settings.window_height, settings.window_width, settings.window_height);
+
+		glColor3f(1.F, 1.F, 1.F);
+
+		char play_time[128];
+		sprintf(play_time, "Playing for %im%is", (int)window_time() / 60, (int)window_time() % 60);
+		font_render(settings.window_width - font_length(27.0F, play_time) - 8.F, settings.window_height, 27.0F, play_time);
+		return;
+	}
+
 	glColor3f(0.5F, 0.5F, 0.5F);
 	if(settings.bg_tile) {
 		float t = window_time() * settings.bg_tile_speed;
@@ -546,23 +558,6 @@ static void hud_render_message(unsigned int channel, unsigned int k) {
 
 static void hud_ingame_render(mu_Context* ctx, float scalex, float scalef) {
 	// window_mousemode(camera_mode==CAMERAMODE_SELECTION?WINDOW_CURSOR_ENABLED:WINDOW_CURSOR_DISABLED);
-	if(show_exit) {
-		glColor4f(1.F, 1.F, 1.F, 1.F);
-		glEnable(GL_BLEND);
-		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-		texture_draw(&texture_ui_exit, 0, settings.window_height, settings.window_width, settings.window_height);
-		glDisable(GL_BLEND);
-
-		glColor3f(1.F, 1.F, 1.F);
-		font_render((settings.window_width - font_length(53.0F * scalef, "EXIT GAME? Y/N")) / 2.0F,
-					settings.window_height / 2.0F + 53.0F * scalef, 53.0F * scalef, "EXIT GAME? Y/N");
-
-		char play_time[128];
-		sprintf(play_time, "Playing for %im%is", (int)window_time() / 60, (int)window_time() % 60);
-		font_render(settings.window_width - font_length(27.0F, play_time) - 8.F, settings.window_height, 27.0F, play_time);
-
-		return;
-	}
 
 	hud_active->render_localplayer = players[local_player_id].team != TEAM_SPECTATOR
 		&& (screen_current == SCREEN_NONE || camera_mode != CAMERAMODE_FPS);
@@ -1629,6 +1624,7 @@ static void hud_ingame_keyboard(int key, int action, int mods, int internal) {
 			if(key == WINDOW_KEY_NO || (show_exit && key == WINDOW_KEY_ESCAPE)) {
 				show_exit = 0;
 				window_mousemode(WINDOW_CURSOR_DISABLED);
+				return;
 			} else if(key == WINDOW_KEY_YES) {
 				if(show_exit) {
 					hud_change(&hud_serverlist);
@@ -1867,6 +1863,10 @@ static void hud_ingame_keyboard(int key, int action, int mods, int internal) {
 				}
 
 				show_exit ^= 1;
+				if(show_exit) {
+					hud_change(&hud_settings);
+				}
+
 				window_mousemode(show_exit ? WINDOW_CURSOR_ENABLED : WINDOW_CURSOR_DISABLED);
 				return;
 			}
@@ -2246,8 +2246,11 @@ static void hud_serverlist_render(mu_Context* ctx, float scalex, float scaley) {
 		int A = ctx->text_width(ctx->style->font, "Servers", 0) * 1.5F;
 		int B = ctx->text_width(ctx->style->font, "Settings", 0) * 1.5F;
 		int C = ctx->text_width(ctx->style->font, "Controls", 0) * 1.5F;
-		int D = ctx->text_width(ctx->style->font, "Exit", 0) * 1.5F;
-		mu_layout_row(ctx, 5, (int[]) {A, B, C, D, -1}, 0);
+		int D = ctx->text_width(ctx->style->font, network_connected ? "Disconnect": "Exit", 0) * 1.5F;
+		if(network_connected)
+			mu_layout_row(ctx, 4, (int[]) {B, C, D, -1}, 0);
+		else
+			mu_layout_row(ctx, 5, (int[]) {A, B, C, D, -1}, 0);
 		mu_text_accent_color(ctx, 1.F);
 		mu_button_ex(ctx, "Servers", 0, MU_OPT_NOINTERACT | MU_OPT_ALIGNCENTER);
 		mu_text_color_default(ctx);
@@ -2256,8 +2259,11 @@ static void hud_serverlist_render(mu_Context* ctx, float scalex, float scaley) {
 		if(mu_button(ctx, "Controls"))
 			hud_change(&hud_controls);
 		mu_text_color(ctx, 255, 60, 60);
-		if(mu_button(ctx, "Exit"))
-			exit(0);
+		if(mu_button(ctx, network_connected ? "Disconnect": "Exit"))
+			if(network_connected)
+				network_disconnect();
+			else
+				exit(0);
 		mu_text_color_default(ctx);
 
 		char total_str[128];
@@ -2651,14 +2657,26 @@ static void hud_settings_render(mu_Context* ctx, float scalex, float scaley) {
 		int A = ctx->text_width(ctx->style->font, "Servers", 0) * 1.5F;
 		int B = ctx->text_width(ctx->style->font, "Settings", 0) * 1.5F;
 		int C = ctx->text_width(ctx->style->font, "Controls", 0) * 1.5F;
-		mu_layout_row(ctx, 4, (int[]) {A, B, C, -1}, 0);
-		if(mu_button(ctx, "Servers"))
+		int D = ctx->text_width(ctx->style->font, network_connected ? "Disconnect": "Exit", 0) * 1.5F;
+		if(network_connected)
+			mu_layout_row(ctx, 4, (int[]) {B, C, D, -1}, 0);
+		else
+			mu_layout_row(ctx, 5, (int[]) {A, B, C, D, -1}, 0);
+
+		if(!network_connected && mu_button(ctx, "Servers"))
 			hud_change(&hud_serverlist);
 		mu_text_accent_color(ctx, 1.F);
 		mu_button_ex(ctx, "Settings", 0, MU_OPT_NOINTERACT | MU_OPT_ALIGNCENTER);
 		mu_text_color_default(ctx);
 		if(mu_button(ctx, "Controls"))
 			hud_change(&hud_controls);
+		mu_text_color(ctx, 255, 60, 60);
+		if(mu_button(ctx, network_connected ? "Disconnect": "Exit"))
+			if(network_connected)
+				network_disconnect();
+			else
+				exit(0);
+		mu_text_color_default(ctx);
 
 		mu_button_ex(ctx, "", 0, MU_OPT_ALIGNRIGHT | MU_OPT_NOINTERACT);
 
@@ -2746,6 +2764,13 @@ static void hud_settings_render(mu_Context* ctx, float scalex, float scaley) {
 	}
 }
 
+static void hud_settings_keyboard(int key, int action, int mods, int internal)  {
+	if(show_exit && key == WINDOW_KEY_ESCAPE) {
+		hud_change(&hud_ingame);
+		show_exit = 1;
+	}
+}
+
 static void hud_settings_touch(void* finger, int action, float x, float y, float dx, float dy) {
 	window_setmouseloc(x, y);
 }
@@ -2754,7 +2779,7 @@ struct hud hud_settings = {
 	hud_settings_init,
 	NULL,
 	hud_settings_render,
-	NULL,
+	hud_settings_keyboard,
 	NULL,
 	NULL,
 	NULL,
@@ -2785,13 +2810,25 @@ static void hud_controls_render(mu_Context* ctx, float scalex, float scaley) {
 		int A = ctx->text_width(ctx->style->font, "Servers", 0) * 1.5F;
 		int B = ctx->text_width(ctx->style->font, "Settings", 0) * 1.5F;
 		int C = ctx->text_width(ctx->style->font, "Controls", 0) * 1.5F;
-		mu_layout_row(ctx, 4, (int[]) {A, B, C, -1}, 0);
-		if(mu_button(ctx, "Servers"))
+		int D = ctx->text_width(ctx->style->font, network_connected ? "Disconnect": "Exit", 0) * 1.5F;
+		if(network_connected)
+			mu_layout_row(ctx, 4, (int[]) {B, C, D, -1}, 0);
+		else
+			mu_layout_row(ctx, 5, (int[]) {A, B, C, D, -1}, 0);
+
+		if(!network_connected && mu_button(ctx, "Servers"))
 			hud_change(&hud_serverlist);
 		if(mu_button(ctx, "Settings"))
 			hud_change(&hud_settings);
 		mu_text_accent_color(ctx, 1.F);
 		mu_button_ex(ctx, "Controls", 0, MU_OPT_NOINTERACT | MU_OPT_ALIGNCENTER);
+		mu_text_color_default(ctx);
+		mu_text_color(ctx, 255, 60, 60);
+		if(mu_button(ctx, network_connected ? "Disconnect": "Exit"))
+			if(network_connected)
+				network_disconnect();
+			else
+				exit(0);
 		mu_text_color_default(ctx);
 		mu_button_ex(ctx, "", 0, MU_OPT_ALIGNRIGHT | MU_OPT_NOINTERACT);
 
@@ -2869,6 +2906,11 @@ static void hud_controls_keyboard(int key, int action, int mods, int internal) {
 		hud_controls_edit->def = internal;
 		hud_controls_edit = NULL;
 		config_save();
+	}
+
+	if(show_exit && key == WINDOW_KEY_ESCAPE) {
+		hud_change(&hud_ingame);
+		show_exit = 1;
 	}
 }
 
