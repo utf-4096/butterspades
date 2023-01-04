@@ -89,7 +89,7 @@ struct config_setting {
 	int min;
 	int max;
 	char name[32];
-	char help[32];
+	char help[64];
 	int defaults[8];
 	int defaults_length;
 	void (*label_callback)(char* buffer, size_t length, int value, size_t index);
