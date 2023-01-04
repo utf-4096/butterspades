@@ -1,6 +1,11 @@
-![GPL v3](https://www.gnu.org/graphics/gplv3-127x51.png)
 
-## ![](docs/icon_small.png) ButterSpades
+
+<img align="left" src="resources.override/png/splash_icon.png"> <b>ButterSpades</b>
+---------------
+[Download for Windows](https://github.com/utf-4096/butterspades/releases/tag/v0.1.5-c7de80d)
+
+
+
 ButterSpades is a fork which aims to improve overall UI and gameplay.
 This repo is maintained by utf and contributors, please expect infrequent updates.
 
