@@ -4,6 +4,16 @@
 ButterSpades is a fork which aims to improve overall UI and gameplay.
 This repo is maintained by utf and contributors, please expect infrequent updates.
 
+## What's different
+- In-game settings/controls menu
+- Updated UI scaling (HUD/Main UI)
+- Configurable UI background and color accents
+- Chat colors (OpenSpades compatible)
+- Adaptive chat size
+- HUD shadows
+- Spectator Y-Clamp
+- Updated icons and font to be crisper
+
 ## System requirements
 
 | Type    | min. requirement                                     |
