@@ -168,7 +168,7 @@ static int config_read_key(void* user, const char* section, const char* name, co
 			settings.hold_down_sights = atoi(value);
 		} else if(!strcmp(name, "chat_shadow")) {
 			settings.chat_shadow = atoi(value);
-		}  else if(!strcmp(name, "chat_flip_on_open")) {
+		} else if(!strcmp(name, "chat_flip_on_open")) {
 			settings.chat_flip_on_open = atoi(value);
 		} else if(!strcmp(name, "show_player_arms")) {
 			settings.player_arms = atoi(value);
@@ -528,6 +528,7 @@ void config_reload() {
 				 .min = 0,
 				 .max = 1,
 				 .name = "Tile background",
+				 .help = "Background will be stretched if disabled",
 			 });
 	list_add(&config_settings,
 			 &(struct config_setting) {
@@ -536,6 +537,7 @@ void config_reload() {
 				 .min = 0,
 				 .max = 2,
 				 .name = "Tile speed",
+				 .help = "The speed at which the tiles move",
 			 });
 	list_add(&config_settings,
 			 &(struct config_setting) {
@@ -544,6 +546,7 @@ void config_reload() {
 				 .min = 0,
 				 .max = 255,
 				 .name = "UI Accent: Red",
+				 .help = "UI accent color (red)",
 			 });
 	list_add(&config_settings,
 			 &(struct config_setting) {
@@ -552,6 +555,7 @@ void config_reload() {
 				 .min = 0,
 				 .max = 255,
 				 .name = "UI Accent: Green",
+				 .help = "UI accent color (green)",
 			 });
 	list_add(&config_settings,
 			 &(struct config_setting) {
@@ -560,6 +564,7 @@ void config_reload() {
 				 .min = 0,
 				 .max = 255,
 				 .name = "UI Accent: Blue",
+				 .help = "UI accent color (blue)",
 			 });
 	list_add(&config_settings,
 			 &(struct config_setting) {
@@ -568,6 +573,7 @@ void config_reload() {
 				 .min = 0,
 				 .max = 1,
 				 .name = "HUD shadows",
+				 .help = "Enables text shadows in various UI elements",
 			 });
 	list_add(&config_settings,
 			 &(struct config_setting) {
