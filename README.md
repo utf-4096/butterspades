@@ -2,7 +2,7 @@
 
 <img align="left" src="resources.override/png/splash_icon.png"> <b>ButterSpades</b>
 ---------------
-[Download for Windows](https://github.com/utf-4096/butterspades/releases/tag/v0.1.5-c7de80d)
+[Download for Windows](https://github.com/utf-4096/butterspades/releases/latest)
 
 
 
