@@ -72,10 +72,6 @@ void font_select(enum font_type type) {
 }
 
 static struct font_backed_data* font_find(float h) {
-	if(font_current_type == FONT_FIXEDSYS) {
-		h = 16.F;
-	}
-
 	if(font_current_type == FONT_SMALLFNT) {
 		h *= 1.5F;
 	}
@@ -269,4 +265,8 @@ void font_render_shadow(float x, float y, float h, char* text, float a) {
 
 void font_centered(float x, float y, float h, char* text) {
 	font_render(x - font_length(h, text) / 2.0F, y, h, text);
+}
+
+void font_centered_shadow(float x, float y, float h, char* text, float a) {
+	font_render_shadow(x - font_length(h, text) / 2.0F, y, h, text, a);
 }

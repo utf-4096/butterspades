@@ -32,6 +32,7 @@ float font_length(float h, char* text);
 void font_render(float x, float y, float h, char* text);
 void font_render_shadow(float x, float y, float h, char* text, float a);
 void font_centered(float x, float y, float h, char* text);
+void font_centered_shadow(float x, float y, float h, char* text, float a);
 void font_select(enum font_type type);
 
 #endif
