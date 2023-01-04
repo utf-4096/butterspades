@@ -5,19 +5,22 @@
 [Download for Windows](https://github.com/utf-4096/butterspades/releases/latest)
 
 
-
-ButterSpades is a fork which aims to improve overall UI and gameplay.
-This repo is maintained by utf and contributors, please expect infrequent updates.
+ButterSpades is a fork which aims to improve the overall UI and feel of [BetterSpades](https://github.com/xtreme8000/BetterSpades).
 
 ## What's different
 - In-game settings/controls menu
-- Updated UI scaling (HUD/Main UI)
+- Better UI scaling (HUD/Main UI)
 - Configurable UI background and color accents
-- Chat colors (OpenSpades compatible)
+- Chat colors and killfeed (OpenSpades compatible)
 - Adaptive chat size
 - HUD shadows
 - Spectator Y-Clamp
-- Updated icons and font to be crisper
+
+## Previews
+
+| <img src="/docs/apoc.png" width="250px"><br />*Apocalypse on Babel* | <img src="/docs/babel.png" width="250px"><br />*Babel* | <img src="/docs/chat.png" width="250px"><br />*Chat* |
+| :-: | :-: | :-: |
+| <img src="/docs/playerlist.png" width="250px"><br />***Player list*** | <img src="/docs/custom_def.png" width="250px"><br />***Customizable UI*** | <img src="/docs/custom.png" width="250px"><br />***Background and color scheme*** |
 
 ## System requirements
 
@@ -109,9 +112,3 @@ The same instructions for Linux work on macOS aside from some minor differences.
 brew install glfw enet
 ```
 The development headers for OpenAL and OpenGL don't have to be installed since they come with macOS by default. [libdeflate](https://github.com/ebiggers/libdeflate) should be installed and placed manually in a way similar to Linux. See [_Wiki/Building_](https://github.com/xtreme8000/BetterSpades/wiki/Building) for more details.
-
-## Gallery
-
-| <img src="/docs/pic01.png" width="250px"><br />*quite old* | <img src="/docs/pic02.png" width="250px"><br />hiesville | <img src="/docs/pic03.png" width="250px"> |
-| :-: | :-: | :-: |
-| <img src="/docs/pic04.png" width="250px"><br />*grenade fun* | <img src="/docs/pic05.png" width="250px"><br />*falling block animation* | <img src="/docs/pic06.png" width="250px"><br />*sniping on normandie* |
