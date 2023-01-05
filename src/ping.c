@@ -91,7 +91,6 @@ static bool pings_retry(void* key, void* value, void* user) {
 void* ping_update(void* data) {
 	pthread_detach(pthread_self());
 
-	ping_lan();
 	float ping_start = window_time();
 
 	HashTable pings;
