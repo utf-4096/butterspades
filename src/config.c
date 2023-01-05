@@ -78,6 +78,7 @@ void config_save() {
 	config_seti("client", "ui_accent_r", settings.ui_accent_r);
 	config_seti("client", "ui_accent_g", settings.ui_accent_g);
 	config_seti("client", "ui_accent_b", settings.ui_accent_b);
+	config_seti("client", "lighten_colors", settings.lighten_colors);
 	config_setf("client", "hud_shadows", settings.hud_shadows);
 	config_seti("client", "multisamples", settings.multisamples);
 	config_seti("client", "greedy_meshing", settings.greedy_meshing);
@@ -184,6 +185,8 @@ static int config_read_key(void* user, const char* section, const char* name, co
 			settings.ui_accent_g = max(0, min(255, atoi(value)));
 		} else if(!strcmp(name, "ui_accent_b")) {
 			settings.ui_accent_b = max(0, min(255, atoi(value)));
+		} else if(!strcmp(name, "lighten_colors")) {
+			settings.lighten_colors = max(0, min(255, atoi(value)));
 		} else if(!strcmp(name, "hud_shadows")) {
 			settings.hud_shadows = atoi(value);
 		}
@@ -565,6 +568,15 @@ void config_reload() {
 				 .max = 255,
 				 .name = "UI Accent: Blue",
 				 .help = "UI accent color (blue)",
+			 });
+	list_add(&config_settings,
+			 &(struct config_setting) {
+				 .value = &settings_tmp.lighten_colors,
+				 .type = CONFIG_TYPE_INT,
+				 .min = 0,
+				 .max = 255,
+				 .name = "Lighten colors",
+				 .help = "Makes in-game team colors in the HUD brighter",
 			 });
 	list_add(&config_settings,
 			 &(struct config_setting) {

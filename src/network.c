@@ -596,24 +596,26 @@ void read_PacketKillAction(void* data, int len) {
 		char m[256];
 
 		char color_killer = team_color_char(players[p->killer_id].team);
-		char color_dead = team_color_char(players[p->player_id].team);
+		char color_dead   = team_color_char(players[p->player_id].team);
+		char color_kill   = (p->killer_id == local_player_id || p->player_id == local_player_id) ? '\4': '\6';
 		switch(p->kill_type) {
 			case KILLTYPE_WEAPON:
-				sprintf(m, "%c%s\6 killed %c%s\6 (%s)", color_killer, players[p->killer_id].name, color_dead, players[p->player_id].name,
-						gun_name[players[p->killer_id].weapon]);
+				sprintf(m, "%c%s%c killed %c%s%c (%s)", color_killer, players[p->killer_id].name, color_kill, color_dead, players[p->player_id].name,
+						color_kill, gun_name[players[p->killer_id].weapon]);
 				break;
 			case KILLTYPE_HEADSHOT:
-				sprintf(m, "%c%s\6 killed %c%s\6 (%s Headshot)", color_killer, players[p->killer_id].name, color_dead, players[p->player_id].name, gun_name[players[p->killer_id].weapon]);
+				sprintf(m, "%c%s%c killed %c%s%c (%s Headshot)", color_killer, players[p->killer_id].name, color_kill, color_dead, players[p->player_id].name,
+					color_kill, gun_name[players[p->killer_id].weapon]);
 				break;
 			case KILLTYPE_MELEE:
-				sprintf(m, "%c%s\6 killed %c%s\6 (Spade)", color_killer, players[p->killer_id].name, color_dead, players[p->player_id].name);
+				sprintf(m, "%c%s%c killed %c%s%c (Spade)", color_killer, players[p->killer_id].name, color_kill, color_dead, players[p->player_id].name, color_kill);
 				break;
 			case KILLTYPE_GRENADE:
-				sprintf(m, "%c%s\6 killed %c%s\6 (Grenade)", color_killer, players[p->killer_id].name, color_dead, players[p->player_id].name);
+				sprintf(m, "%c%s%c killed %c%s%c (Grenade)", color_killer, players[p->killer_id].name, color_kill, color_dead, players[p->player_id].name, color_kill);
 				break;
-			case KILLTYPE_FALL: sprintf(m, "%c%s\6 fell too far", color_dead, players[p->player_id].name); break;
-			case KILLTYPE_TEAMCHANGE: sprintf(m, "%c%s\6 changed teams", color_dead, players[p->player_id].name); break;
-			case KILLTYPE_CLASSCHANGE: sprintf(m, "%c%s\6 changed weapons", color_dead, players[p->player_id].name); break;
+			case KILLTYPE_FALL: sprintf(m, "%c%s%c fell too far", color_dead, players[p->player_id].name, color_kill); break;
+			case KILLTYPE_TEAMCHANGE: sprintf(m, "%c%s%c changed teams", color_dead, players[p->player_id].name, color_kill); break;
+			case KILLTYPE_CLASSCHANGE: sprintf(m, "%c%s%c changed weapons", color_dead, players[p->player_id].name, color_kill); break;
 		}
 		if(p->killer_id == local_player_id || p->player_id == local_player_id) {
 			chat_add(1, 0x0000FF, m);

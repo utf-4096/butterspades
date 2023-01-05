@@ -52,6 +52,8 @@
 struct hud* hud_active;
 struct window_instance* hud_window;
 
+#define LIGHTEN(c) (255.F * (settings.lighten_colors / 255.F) + c * (1.F - settings.lighten_colors / 255.F))
+
 static int is_inside_centered(double mx, double my, int x, int y, int w, int h) {
 	return mx >= x - w / 2 && mx < x + w / 2 && my >= y - h / 2 && my < y + h / 2;
 }
@@ -524,6 +526,14 @@ static inline void hud_font_render(float x, float y, float h, char* text, float 
 	}
 }
 
+static inline void hud_font_render_centered(float x, float y, float h, char* text, float a) {
+	if(settings.hud_shadows) {
+		font_centered_shadow(x, y, h, text, a);
+	} else {
+		font_centered(x, y, h, text);
+	}
+}
+
 static int chat_messages = 16;
 
 static void hud_render_message(unsigned int channel, unsigned int k) {
@@ -532,8 +542,8 @@ static void hud_render_message(unsigned int channel, unsigned int k) {
 	for(c = chat[channel][k + 1]; *c != '\0'; c++) {
 		// Chat color
 		switch(*c) {
-			case '\1': glColor3ub(gamestate.team_1.red, gamestate.team_1.green, gamestate.team_1.blue); break; // Team1 color
-			case '\2': glColor3ub(gamestate.team_2.red, gamestate.team_2.green, gamestate.team_2.blue); break; // Team2 color
+			case '\1': glColor3ub(LIGHTEN(gamestate.team_1.red), LIGHTEN(gamestate.team_1.green), LIGHTEN(gamestate.team_1.blue)); break; // Team1 color
+			case '\2': glColor3ub(LIGHTEN(gamestate.team_2.red), LIGHTEN(gamestate.team_2.green), LIGHTEN(gamestate.team_2.blue)); break; // Team2 color
 			case '\3': glColor3ub(255, 255, 255); break; // Team3 (spec) color
 			case '\4': glColor3ub(255, 0, 0); break; // Red
 			case '\5': glColor3ub(0, 255, 0); break; // Green
@@ -546,12 +556,14 @@ static void hud_render_message(unsigned int channel, unsigned int k) {
 		single[1] = '\0';
 
 		if(channel == 0) {
+			// Chat
 			if(chat_input_mode != CHAT_NO_INPUT && settings.chat_flip_on_open) {
 				hud_font_render(11.0F + l - font_length(16.0F, c), 76.F + ((k + 2.F) * 16.F), 16.0F, single, 0.F);
 			} else {
 				hud_font_render(11.0F + l - font_length(16.0F, c), 76.F + ((chat_messages - k + 1.F) * 16.F), 16.0F, single, 0.F);
 			}
 		} else if(channel == 1) {
+			// Killfeed
 			hud_font_render(11.0F + l - font_length(16.0F, c), settings.window_height - 22.0F - 10.0F * k - k * 8.F,
 						16.0F, single, 0.25F);
 		}
@@ -919,8 +931,9 @@ static void hud_ingame_render(mu_Context* ctx, float scalex, float scalef) {
 			struct texture* item_mini;
 			int off = 0;
 
-			mu_Color color = mu_accent_color(1.F, 255);
-			glColor3ub(color.r, color.g, color.b);
+			struct Team* team = players[local_id].team == 0 ? &gamestate.team_1: &gamestate.team_2;
+			glColor3ub(LIGHTEN(team->red), LIGHTEN(team->green), LIGHTEN(team->blue));
+
 			switch(players[local_id].held_item) {
 				default:
 				case TOOL_BLOCK: off = 64 * scalef;
@@ -1193,13 +1206,13 @@ static void hud_ingame_render(mu_Context* ctx, float scalex, float scalef) {
 				glColor4f(0.F, 0.F, 0.F, 0.7F);
 
 				switch(players[local_player_id].team) {
-					case TEAM_1: glColor3ub(gamestate.team_1.red, gamestate.team_1.green, gamestate.team_1.blue); break;
-					case TEAM_2: glColor3ub(gamestate.team_2.red, gamestate.team_2.green, gamestate.team_2.blue); break;
+					case TEAM_1: glColor3ub(LIGHTEN(gamestate.team_1.red), LIGHTEN(gamestate.team_1.green), LIGHTEN(gamestate.team_1.blue)); break;
+					case TEAM_2: glColor3ub(LIGHTEN(gamestate.team_2.red), LIGHTEN(gamestate.team_2.green), LIGHTEN(gamestate.team_2.blue)); break;
 					case TEAM_SPECTATOR:
-					default: glColor3f(0.0F, 0.0F, 0.0F); // same as chat
+					default: glColor3ub(150, 150, 150);
 				}
 				font_select(FONT_FANTASY);
-				font_centered_shadow(settings.window_width - 77 * scalef, 454 * scalef, 30.F, sector_str, 1.F);
+				hud_font_render_centered(settings.window_width - 77 * scalef, 454 * scalef, 30.F, sector_str, 1.F);
 				font_select(FONT_FIXEDSYS);
 
 				glColor3ub(0, 0, 0);

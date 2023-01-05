@@ -48,6 +48,7 @@ extern struct RENDER_OPTIONS {
 	int ui_accent_r;
 	int ui_accent_g;
 	int ui_accent_b;
+	int lighten_colors;
 	int hud_shadows;
 	int greedy_meshing;
 	int vsync;
