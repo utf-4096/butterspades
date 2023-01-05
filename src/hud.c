@@ -819,10 +819,16 @@ static void hud_ingame_render(mu_Context* ctx, float scalex, float scalef) {
 				glColor4f(1.F, 1.F, 1.F, 0.7F);
 				font_render(x_offset + 4.F, 450 * scalef - 6.F - (20 * (cntt[mul - 1] + 1)) - y_offset,
 							16.0F, id_str);
-				glDisable(GL_BLEND);
-				glColor3f(1.F, 1.F, 1.F);
+
+				if(players[pt[k].id].alive) {
+					glColor3f(1.F, 1.F, 1.F);
+				} else {
+					glColor4f(1.F, 1.F, 1.F, 0.5F);
+				}
+
 				font_render(x_offset + 36.F,
 							450 * scalef - 6.F - (20 * (cntt[mul - 1] + 1)) - y_offset, 16.0F, players[pt[k].id].name);
+				glDisable(GL_BLEND);
 				if(mul != 2) {
 					sprintf(id_str, "%i", pt[k].score);
 					font_render(x_offset + 300.F - font_length(16.F, id_str) - 4.F,
