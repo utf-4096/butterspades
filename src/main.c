@@ -409,10 +409,10 @@ void display() {
 
 		if(ctx) {
 			hud_active->ctx->style->padding = 5;
-			hud_active->ctx->style->spacing = 8 * scalef - 4;
-			hud_active->ctx->style->title_height = 48 * scalef - 24;
-			hud_active->ctx->style->scrollbar_size = 12 * scalef;
-			hud_active->ctx->style->thumb_size = 8 * scalef;
+			hud_active->ctx->style->spacing = 8;
+			hud_active->ctx->style->title_height = 24;
+			hud_active->ctx->style->scrollbar_size = 12;
+			hud_active->ctx->style->thumb_size = 8;
 
 			mu_begin(ctx);
 		}
