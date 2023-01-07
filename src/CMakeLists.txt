@@ -195,6 +195,10 @@ if(ENABLE_RPC)
 	target_link_libraries(client discord-rpc stdc++)
 	target_compile_definitions(client PRIVATE USE_RPC DISCORD_DISABLE_IO_THREAD)
 endif()
+if(DEFINED ENV{BUILD_NUMBER})
+	target_compile_definitions(client PRIVATE JENKINS_BUILD="$ENV{BUILD_NUMBER}")
+endif()
+
 
 if(WIN32)
 	target_compile_definitions(client PRIVATE LIBDEFLATE_STATIC)
