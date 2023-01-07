@@ -124,6 +124,7 @@ void hud_change(struct hud* new) {
 		hud_active->ctx->style->colors[MU_COLOR_BASEHOVER] = mu_accent_color(0.5F, 255);
 		hud_active->ctx->style->colors[MU_COLOR_PANELBG] = mu_accent_color(0.1F, 192);
 		hud_active->ctx->style->colors[MU_COLOR_WINDOWBG] = mu_accent_color(0.1F, 192);
+		hud_active->ctx->style->colors[MU_COLOR_TITLEBG] = mu_accent_color(0.8F, 255);
 		hud_active->ctx->style->colors[MU_COLOR_SCROLLTHUMB] = mu_accent_color(0.5F, 255);
 		hud_active->ctx->style->colors[MU_COLOR_SCROLLBASE] = mu_accent_color(0.05F, 255);
 	}
@@ -139,6 +140,9 @@ static float hud_ingame_touch_y = 0.0F;
 
 int screen_current = SCREEN_NONE;
 int show_exit = 0;
+int show_update_popup = 0;
+static char latest_ver[32];
+
 static void hud_ingame_init() {
 	window_textinput(0);
 	chat_input_mode = CHAT_NO_INPUT;
@@ -508,6 +512,32 @@ static inline void hud_common_render(mu_Context* ctx) {
 			settings.window_height
 		);
 	}
+
+#ifdef JENKINS_BUILD
+	if(show_update_popup && mu_begin_window_ex(ctx, "New ButterSpades version available", mu_rect(0, 0, 350, 155),
+							 MU_OPT_HOLDFOCUS | MU_OPT_NORESIZE | MU_OPT_NOCLOSE)) {
+		mu_Container* cnt = mu_get_current_container(ctx);
+		mu_bring_to_front(ctx, cnt);
+		cnt->rect = mu_rect((settings.window_width - 350) / 2, 200, 350, 155);
+		mu_layout_row(ctx, 1, (int[]) {-1}, -ctx->text_height(ctx->style->font) * 1.75F);
+
+		char msg[1024];
+		int diff = atoi(latest_ver) - atoi(JENKINS_BUILD);
+		snprintf(msg, 1023, "Your client version (%s) is %i version%s behind.\n"
+							"Visit butter.penguins.win/download to update to the latest version (%s).",
+				 JENKINS_BUILD, diff, diff != 1 ? "s": "", latest_ver);
+		mu_text(ctx, msg);
+		int A = ctx->text_width(ctx->style->font, "Later", 0) * 1.6F;
+		mu_layout_row(ctx, 2, (int[]) {-A, -1}, 0);
+		if(mu_button(ctx, "Go to website"))
+			file_url("https://butter.penguins.win/download");
+		if(mu_button(ctx, "Later")) {
+			show_update_popup = 0;
+		}
+
+		mu_end_window(ctx);
+	}
+#endif
 }
 
 static inline void hud_texture_draw(struct texture* t, float x, float y, float w, float h) {
@@ -2179,7 +2209,9 @@ static void hud_serverlist_init() {
 	server_count = 0;
 	serverlist_is_outdated = 0;
 	request_serverlist = http_get("http://services.buildandshoot.com/serverlist.json", NULL);
-	request_version = http_get("http://aos.party/bs/version/", NULL);
+#ifdef JENKINS_BUILD
+	request_version = http_get("http://butter.penguins.win/api/version/", NULL);
+#endif
 	if(!serverlist_news_exists)
 		request_news = http_get("http://aos.party/bs/news/", NULL);
 
@@ -2316,41 +2348,78 @@ static struct texture* hud_serverlist_ui_images(int icon_id, bool* resize) {
 	}
 }
 
+#define IF_SELECTED(x) x
+
+static void hud_nav_button(mu_Context* ctx, struct hud* hud_struct, const char* name) {
+	if(hud_active == hud_struct) {
+		mu_Color old_button_bg = ctx->style->colors[MU_COLOR_BUTTON];
+
+		ctx->style->colors[MU_COLOR_BUTTON] = ctx->style->colors[MU_COLOR_BORDER];
+		mu_button_ex(ctx, name, 0, MU_OPT_NOINTERACT | MU_OPT_ALIGNCENTER);
+		ctx->style->colors[MU_COLOR_BUTTON] = old_button_bg;
+	} else {
+		if(mu_button(ctx, name))
+			hud_change(hud_struct);
+	}
+}
+
+static void hud_common_nav(mu_Context* ctx, mu_Rect* frame, float scalex, float scaley) {
+	mu_Container* cnt = mu_get_current_container(ctx);
+	cnt->rect = *frame;
+
+	int A = ctx->text_width(ctx->style->font, "Servers", 0) * 1.5F;
+	int B = ctx->text_width(ctx->style->font, "Settings", 0) * 1.5F;
+	int C = ctx->text_width(ctx->style->font, "Controls", 0) * 1.5F;
+	int D = ctx->text_width(ctx->style->font, "New updates", 0) * 1.2F;
+	int E = ctx->text_width(ctx->style->font, network_connected ? "Disconnect": "Exit", 0) * 1.5F;
+
+	if(network_connected)
+		mu_layout_row(ctx, 4, (int[]) {B, C, E, -1}, 0);
+	else {
+		if(serverlist_is_outdated) {
+			mu_layout_row(ctx, 6, (int[]) {A, B, C, D, E, -1}, 0);
+		} else {
+			mu_layout_row(ctx, 5, (int[]) {A, B, C, E, -1}, 0);
+		}
+	}
+
+	hud_nav_button(ctx, &hud_serverlist, "Servers");
+	hud_nav_button(ctx, &hud_settings, "Settings");
+	hud_nav_button(ctx, &hud_controls, "Controls");
+
+	if(serverlist_is_outdated) {
+		mu_text_color(ctx, 255, 255, 60);
+		if(mu_button(ctx, "New updates")) {
+			show_update_popup = 1;
+		}
+
+		mu_text_color_default(ctx);
+	}
+
+	mu_text_color(ctx, 255, 60, 60);
+	if(mu_button(ctx, network_connected ? "Disconnect": "Exit"))
+		if(network_connected)
+			hud_change(&hud_serverlist);
+		else
+			exit(0);
+	mu_text_color_default(ctx);
+
+	char total_str[128];
+	if(hud_active == &hud_serverlist) {
+		sprintf(total_str, (server_count > 0) ? "%i players on %i servers" : "No servers", player_count, server_count);
+	} else {
+		sprintf(total_str, "butterspades %s %s", BETTERSPADES_VERSION, BS_VER_INFO);
+	}
+	mu_button_ex(ctx, total_str, 0, MU_OPT_ALIGNRIGHT | MU_OPT_NOINTERACT);
+}
+
 static void hud_serverlist_render(mu_Context* ctx, float scalex, float scaley) {
 	hud_common_render(ctx);
 
 	mu_Rect frame = mu_rect(settings.window_width / 2.F - fminf(1024.F, settings.window_width * 0.75F) / 2.F, 0, fminf(1024.F, settings.window_width * 0.75F), settings.window_height);
 
 	if(mu_begin_window_ex(ctx, "Main", frame, MU_OPT_NOFRAME | MU_OPT_NOTITLE | MU_OPT_NORESIZE)) {
-		mu_Container* cnt = mu_get_current_container(ctx);
-		cnt->rect = frame;
-
-		int A = ctx->text_width(ctx->style->font, "Servers", 0) * 1.5F;
-		int B = ctx->text_width(ctx->style->font, "Settings", 0) * 1.5F;
-		int C = ctx->text_width(ctx->style->font, "Controls", 0) * 1.5F;
-		int D = ctx->text_width(ctx->style->font, network_connected ? "Disconnect": "Exit", 0) * 1.5F;
-		if(network_connected)
-			mu_layout_row(ctx, 4, (int[]) {B, C, D, -1}, 0);
-		else
-			mu_layout_row(ctx, 5, (int[]) {A, B, C, D, -1}, 0);
-		mu_text_accent_color(ctx, 1.F);
-		mu_button_ex(ctx, "Servers", 0, MU_OPT_NOINTERACT | MU_OPT_ALIGNCENTER);
-		mu_text_color_default(ctx);
-		if(mu_button(ctx, "Settings"))
-			hud_change(&hud_settings);
-		if(mu_button(ctx, "Controls"))
-			hud_change(&hud_controls);
-		mu_text_color(ctx, 255, 60, 60);
-		if(mu_button(ctx, network_connected ? "Disconnect": "Exit"))
-			if(network_connected)
-				hud_change(&hud_serverlist);
-			else
-				exit(0);
-		mu_text_color_default(ctx);
-
-		char total_str[128];
-		sprintf(total_str, (server_count > 0) ? "%i players on %i servers" : "No servers", player_count, server_count);
-		mu_button_ex(ctx, total_str, 0, MU_OPT_ALIGNRIGHT | MU_OPT_NOINTERACT);
+		hud_common_nav(ctx, &frame, scalex, scaley);
 
 		mu_layout_row(ctx, 1, (int[]) {-1}, settings.window_height * 0.3F);
 
@@ -2439,6 +2508,7 @@ static void hud_serverlist_render(mu_Context* ctx, float scalex, float scaley) {
 
 		pthread_mutex_lock(&serverlist_lock);
 		if(server_count > 0) {
+			char total_str[128];
 			for(int k = 0; k < server_count; k++) {
 				if(serverlist[k].current >= 0)
 					sprintf(total_str, "%i/%i", serverlist[k].current, serverlist[k].max);
@@ -2498,25 +2568,6 @@ static void hud_serverlist_render(mu_Context* ctx, float scalex, float scaley) {
 		mu_end_window(ctx);
 	}
 
-	if(serverlist_is_outdated
-	   && mu_begin_window_ex(ctx, "NEW CLIENT VERSION AVAILABLE!", mu_rect(300, 200, 350, 200),
-							 MU_OPT_HOLDFOCUS | MU_OPT_NORESIZE | MU_OPT_NOCLOSE)) {
-		mu_Container* cnt = mu_get_current_container(ctx);
-		mu_bring_to_front(ctx, cnt);
-		cnt->rect = mu_rect((settings.window_width - 350) / 2, 200, 350, 200);
-		mu_layout_row(ctx, 1, (int[]) {-1}, -ctx->text_height(ctx->style->font) * 1.75F);
-		mu_text(ctx,
-				"Your game is outdated and should be updated immediately.\n\n"
-				"Head over to https://aos.party/bs.");
-		int A = ctx->text_width(ctx->style->font, "Close", 0) * 1.6F;
-		mu_layout_row(ctx, 2, (int[]) {-A, -1}, 0);
-		if(mu_button(ctx, "Go to website"))
-			file_url("https://aos.party/bs");
-		if(mu_button(ctx, "Close"))
-			cnt->open = 0;
-		mu_end_window(ctx);
-	}
-
 	if(window_time() - chat_popup_timer < chat_popup_duration
 	   && mu_begin_window_ex(ctx, "Disconnected from server", mu_rect(200, 250, 300, 100),
 							 MU_OPT_HOLDFOCUS | MU_OPT_NORESIZE | MU_OPT_NOCLOSE)) {
@@ -2573,12 +2624,14 @@ static void hud_serverlist_render(mu_Context* ctx, float scalex, float scaley) {
 		}
 	}
 
+#ifdef JENKINS_BUILD
 	if(request_version) {
 		switch(http_process(request_version)) {
 			case HTTP_STATUS_COMPLETED:
 				serverlist_is_outdated = 1;
-				log_info("newest game version: %s", request_version->response_data);
-				log_info("current game version: %s", BETTERSPADES_VERSION);
+				strcpy(latest_ver, request_version->response_data);
+				log_info("newest game version: %s", latest_ver);
+				log_info("current game version: %s", JENKINS_BUILD);
 				serverlist_is_outdated = strcmp(request_version->response_data, BETTERSPADES_VERSION) != 0;
 				http_release(request_version);
 				request_version = NULL;
@@ -2589,6 +2642,7 @@ static void hud_serverlist_render(mu_Context* ctx, float scalex, float scaley) {
 				break;
 		}
 	}
+#endif
 
 	int render_status_icon = !serverlist_con_established;
 	if(request_serverlist) {
@@ -2736,31 +2790,7 @@ static void hud_settings_render(mu_Context* ctx, float scalex, float scaley) {
 		mu_Container* cnt = mu_get_current_container(ctx);
 		cnt->rect = frame;
 
-		int A = ctx->text_width(ctx->style->font, "Servers", 0) * 1.5F;
-		int B = ctx->text_width(ctx->style->font, "Settings", 0) * 1.5F;
-		int C = ctx->text_width(ctx->style->font, "Controls", 0) * 1.5F;
-		int D = ctx->text_width(ctx->style->font, network_connected ? "Disconnect": "Exit", 0) * 1.5F;
-		if(network_connected)
-			mu_layout_row(ctx, 4, (int[]) {B, C, D, -1}, 0);
-		else
-			mu_layout_row(ctx, 5, (int[]) {A, B, C, D, -1}, 0);
-
-		if(!network_connected && mu_button(ctx, "Servers"))
-			hud_change(&hud_serverlist);
-		mu_text_accent_color(ctx, 1.F);
-		mu_button_ex(ctx, "Settings", 0, MU_OPT_NOINTERACT | MU_OPT_ALIGNCENTER);
-		mu_text_color_default(ctx);
-		if(mu_button(ctx, "Controls"))
-			hud_change(&hud_controls);
-		mu_text_color(ctx, 255, 60, 60);
-		if(mu_button(ctx, network_connected ? "Disconnect": "Exit"))
-			if(network_connected)
-				hud_change(&hud_serverlist);
-			else
-				exit(0);
-		mu_text_color_default(ctx);
-
-		mu_button_ex(ctx, "", 0, MU_OPT_ALIGNRIGHT | MU_OPT_NOINTERACT);
+		hud_common_nav(ctx, &frame, scalex, scaley);
 
 		mu_layout_row(ctx, 1, (int[]) {-1}, -1);
 
@@ -2889,30 +2919,7 @@ static void hud_controls_render(mu_Context* ctx, float scalex, float scaley) {
 		mu_Container* cnt = mu_get_current_container(ctx);
 		cnt->rect = frame;
 
-		int A = ctx->text_width(ctx->style->font, "Servers", 0) * 1.5F;
-		int B = ctx->text_width(ctx->style->font, "Settings", 0) * 1.5F;
-		int C = ctx->text_width(ctx->style->font, "Controls", 0) * 1.5F;
-		int D = ctx->text_width(ctx->style->font, network_connected ? "Disconnect": "Exit", 0) * 1.5F;
-		if(network_connected)
-			mu_layout_row(ctx, 4, (int[]) {B, C, D, -1}, 0);
-		else
-			mu_layout_row(ctx, 5, (int[]) {A, B, C, D, -1}, 0);
-
-		if(!network_connected && mu_button(ctx, "Servers"))
-			hud_change(&hud_serverlist);
-		if(mu_button(ctx, "Settings"))
-			hud_change(&hud_settings);
-		mu_text_accent_color(ctx, 1.F);
-		mu_button_ex(ctx, "Controls", 0, MU_OPT_NOINTERACT | MU_OPT_ALIGNCENTER);
-		mu_text_color_default(ctx);
-		mu_text_color(ctx, 255, 60, 60);
-		if(mu_button(ctx, network_connected ? "Disconnect": "Exit"))
-			if(network_connected)
-				hud_change(&hud_serverlist);
-			else
-				exit(0);
-		mu_text_color_default(ctx);
-		mu_button_ex(ctx, "", 0, MU_OPT_ALIGNRIGHT | MU_OPT_NOINTERACT);
+		hud_common_nav(ctx, &frame, scalex, scaley);
 
 		mu_layout_row(ctx, 1, (int[]) {-1}, -1);
 
