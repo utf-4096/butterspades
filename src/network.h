@@ -20,6 +20,12 @@
 #ifndef NETWORK_H
 #define NETWORK_H
 
+#ifdef JENKINS_BUILD
+#define BS_VER_INFO "jenkins/" JENKINS_BUILD
+#else
+#define BS_VER_INFO "git/" GIT_COMMIT_HASH
+#endif
+
 const char* network_reason_disconnect(int code);
 
 unsigned int network_ping(void);

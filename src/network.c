@@ -862,22 +862,22 @@ void read_PacketVersionGet(void* data, int len) {
 	ver.revision = BETTERSPADES_PATCH;
 #ifndef OPENGL_ES
 #ifdef OS_WINDOWS
-	char* os = "ButterSpades (Windows) " GIT_COMMIT_HASH;
+	char* os = "ButterSpades (Windows) " BS_VER_INFO;
 #endif
 #ifdef OS_LINUX
-	char* os = "ButterSpades (Linux) " GIT_COMMIT_HASH;
+	char* os = "ButterSpades (Linux) " BS_VER_INFO;
 #endif
 #ifdef OS_APPLE
-	char* os = "ButterSpades (Apple) " GIT_COMMIT_HASH;
+	char* os = "ButterSpades (Apple) " BS_VER_INFO;
 #endif
 #ifdef OS_HAIKU
-	char* os = "ButterSpades (Haiku) " GIT_COMMIT_HASH;
+	char* os = "ButterSpades (Haiku) " BS_VER_INFO;
 #endif
 #else
 #ifdef USE_TOUCH
-	char* os = "ButterSpades (Android) " GIT_COMMIT_HASH;
+	char* os = "ButterSpades (Android) " BS_VER_INFO;
 #else
-	char* os = "ButterSpades (Embedded) " GIT_COMMIT_HASH;
+	char* os = "ButterSpades (Embedded) " BS_VER_INFO;
 #endif
 #endif
 	strcpy(ver.operatingsystem, os);
