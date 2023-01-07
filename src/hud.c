@@ -2632,7 +2632,7 @@ static void hud_serverlist_render(mu_Context* ctx, float scalex, float scaley) {
 				strcpy(latest_ver, request_version->response_data);
 				log_info("newest game version: %s", latest_ver);
 				log_info("current game version: %s", JENKINS_BUILD);
-				serverlist_is_outdated = strcmp(request_version->response_data, BETTERSPADES_VERSION) != 0;
+				serverlist_is_outdated = strcmp(request_version->response_data, JENKINS_BUILD) != 0;
 				http_release(request_version);
 				request_version = NULL;
 				break;
