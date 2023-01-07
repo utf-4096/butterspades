@@ -481,12 +481,6 @@ static inline void hud_common_render(mu_Context* ctx) {
 		mu_Color color = mu_accent_color(0.15F, 1.F);
 		glColor3ub(color.r, color.g, color.b);
 		texture_draw_empty(0, settings.window_height, settings.window_width, settings.window_height);
-
-		glColor3f(1.F, 1.F, 1.F);
-
-		char play_time[128];
-		sprintf(play_time, "Playing for %im%is", (int)window_time() / 60, (int)window_time() % 60);
-		font_render(settings.window_width - font_length(16.0F, play_time) - 8.F, settings.window_height, 16.0F, play_time);
 		return;
 	}
 
@@ -2373,9 +2367,13 @@ static void hud_common_nav(mu_Context* ctx, mu_Rect* frame, float scalex, float 
 	int D = ctx->text_width(ctx->style->font, "New updates", 0) * 1.2F;
 	int E = ctx->text_width(ctx->style->font, network_connected ? "Disconnect": "Exit", 0) * 1.5F;
 
-	if(network_connected)
-		mu_layout_row(ctx, 4, (int[]) {B, C, E, -1}, 0);
-	else {
+	if(network_connected) {
+		if(serverlist_is_outdated) {
+			mu_layout_row(ctx, 5, (int[]) {B, C, D, E, -1}, 0);
+		} else {
+			mu_layout_row(ctx, 4, (int[]) {B, C, E, -1}, 0);
+		}
+	} else {
 		if(serverlist_is_outdated) {
 			mu_layout_row(ctx, 6, (int[]) {A, B, C, D, E, -1}, 0);
 		} else {
@@ -2383,7 +2381,10 @@ static void hud_common_nav(mu_Context* ctx, mu_Rect* frame, float scalex, float 
 		}
 	}
 
-	hud_nav_button(ctx, &hud_serverlist, "Servers");
+	if(!network_connected) {
+		hud_nav_button(ctx, &hud_serverlist, "Servers");
+	}
+
 	hud_nav_button(ctx, &hud_settings, "Settings");
 	hud_nav_button(ctx, &hud_controls, "Controls");
 
@@ -2408,7 +2409,11 @@ static void hud_common_nav(mu_Context* ctx, mu_Rect* frame, float scalex, float 
 	if(hud_active == &hud_serverlist) {
 		sprintf(total_str, (server_count > 0) ? "%i players on %i servers" : "No servers", player_count, server_count);
 	} else {
-		sprintf(total_str, "butterspades %s %s", BETTERSPADES_VERSION, BS_VER_INFO);
+		if(network_connected) {
+			sprintf(total_str, "Playing for %im%is", (int)window_time() / 60, (int)window_time() % 60);
+		} else {
+			sprintf(total_str, "butterspades %s %s", BETTERSPADES_VERSION, BS_VER_INFO);
+		}
 	}
 	mu_button_ex(ctx, total_str, 0, MU_OPT_ALIGNRIGHT | MU_OPT_NOINTERACT);
 }
