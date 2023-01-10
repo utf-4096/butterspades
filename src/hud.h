@@ -68,5 +68,6 @@ extern struct window_instance* hud_window;
 void hud_change(struct hud* new);
 void hud_init();
 void hud_mousemode(int mode);
+int hud_accent_color();
 
 #endif

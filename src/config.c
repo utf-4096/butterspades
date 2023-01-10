@@ -79,6 +79,7 @@ void config_save() {
 	config_seti("client", "ui_accent_g", settings.ui_accent_g);
 	config_seti("client", "ui_accent_b", settings.ui_accent_b);
 	config_seti("client", "lighten_colors", settings.lighten_colors);
+	config_seti("client", "show_names_in_spec", settings.show_names_in_spec);
 	config_setf("client", "hud_shadows", settings.hud_shadows);
 	config_seti("client", "multisamples", settings.multisamples);
 	config_seti("client", "greedy_meshing", settings.greedy_meshing);
@@ -97,6 +98,7 @@ void config_save() {
 	config_seti("client", "chat_shadow", settings.chat_shadow);
 	config_seti("client", "chat_flip_on_open", settings.chat_flip_on_open);
 	config_seti("client", "show_player_arms", settings.player_arms);
+	config_seti("client", "chat_spacing", settings.chat_spacing);
 
 	for(int k = 0; k < list_size(&config_keys); k++) {
 		struct config_key_pair* e = list_get(&config_keys, k);
@@ -168,15 +170,19 @@ static int config_read_key(void* user, const char* section, const char* name, co
 		} else if(!strcmp(name, "hold_down_sights")) {
 			settings.hold_down_sights = atoi(value);
 		} else if(!strcmp(name, "chat_shadow")) {
-			settings.chat_shadow = atoi(value);
+			settings.chat_shadow = fmax(0, fmin(1.f, atof(value)));
 		} else if(!strcmp(name, "chat_flip_on_open")) {
 			settings.chat_flip_on_open = atoi(value);
 		} else if(!strcmp(name, "show_player_arms")) {
 			settings.player_arms = atoi(value);
+		} else if(!strcmp(name, "chat_spacing")) {
+			settings.chat_spacing = atoi(value);
 		} else if(!strcmp(name, "last_address")) {
 			strcpy(settings.last_address, value);
 		} else if(!strcmp(name, "bg_tile")) {
 			settings.bg_tile = atoi(value);
+		} else if(!strcmp(name, "show_names_in_spec")) {
+			settings.show_names_in_spec = atoi(value);
 		} else if(!strcmp(name, "bg_tile_speed")) {
 			settings.bg_tile_speed = fmax(0.0F, atof(value));
 		} else if(!strcmp(name, "ui_accent_r")) {
@@ -526,69 +532,6 @@ void config_reload() {
 			 });
 	list_add(&config_settings,
 			 &(struct config_setting) {
-				 .value = &settings_tmp.bg_tile,
-				 .type = CONFIG_TYPE_INT,
-				 .min = 0,
-				 .max = 1,
-				 .name = "Tile background",
-				 .help = "Background will be stretched if disabled",
-			 });
-	list_add(&config_settings,
-			 &(struct config_setting) {
-				 .value = &settings_tmp.bg_tile_speed,
-				 .type = CONFIG_TYPE_FLOAT,
-				 .min = 0,
-				 .max = 2,
-				 .name = "Tile speed",
-				 .help = "The speed at which the tiles move",
-			 });
-	list_add(&config_settings,
-			 &(struct config_setting) {
-				 .value = &settings_tmp.ui_accent_r,
-				 .type = CONFIG_TYPE_INT,
-				 .min = 0,
-				 .max = 255,
-				 .name = "UI Accent: Red",
-				 .help = "UI accent color (red)",
-			 });
-	list_add(&config_settings,
-			 &(struct config_setting) {
-				 .value = &settings_tmp.ui_accent_g,
-				 .type = CONFIG_TYPE_INT,
-				 .min = 0,
-				 .max = 255,
-				 .name = "UI Accent: Green",
-				 .help = "UI accent color (green)",
-			 });
-	list_add(&config_settings,
-			 &(struct config_setting) {
-				 .value = &settings_tmp.ui_accent_b,
-				 .type = CONFIG_TYPE_INT,
-				 .min = 0,
-				 .max = 255,
-				 .name = "UI Accent: Blue",
-				 .help = "UI accent color (blue)",
-			 });
-	list_add(&config_settings,
-			 &(struct config_setting) {
-				 .value = &settings_tmp.lighten_colors,
-				 .type = CONFIG_TYPE_INT,
-				 .min = 0,
-				 .max = 255,
-				 .name = "Lighten colors",
-				 .help = "Makes in-game team colors in the HUD brighter",
-			 });
-	list_add(&config_settings,
-			 &(struct config_setting) {
-				 .value = &settings_tmp.hud_shadows,
-				 .type = CONFIG_TYPE_INT,
-				 .min = 0,
-				 .max = 1,
-				 .name = "HUD shadows",
-				 .help = "Enables text shadows in various UI elements",
-			 });
-	list_add(&config_settings,
-			 &(struct config_setting) {
 				 .value = &settings_tmp.multisamples,
 				 .type = CONFIG_TYPE_INT,
 				 .min = 0,
@@ -602,24 +545,6 @@ void config_reload() {
 				 16,
 				 .defaults_length = 5,
 				 .label_callback = config_label_msaa,
-			 });
-	list_add(&config_settings,
-			 &(struct config_setting) {
-				 .value = &settings_tmp.chat_shadow,
-				 .type = CONFIG_TYPE_INT,
-				 .min = 0,
-				 .max = 1,
-				 .help = "Dark chat background",
-				 .name = "Chat shadow",
-			 });
-	list_add(&config_settings,
-			 &(struct config_setting) {
-				 .value = &settings_tmp.chat_flip_on_open,
-				 .type = CONFIG_TYPE_INT,
-				 .min = 0,
-				 .max = 1,
-				 .help = "Flip chat order when open",
-				 .name = "Reverse chat on open",
 			 });
 	list_add(&config_settings,
 			 &(struct config_setting) {
@@ -701,5 +626,104 @@ void config_reload() {
 				 .max = 1,
 				 .name = "Show news",
 				 .help = "Show news on server list",
+			 });
+	list_add(&config_settings,
+			 &(struct config_setting) {
+				 .value = &settings_tmp.chat_shadow,
+				 .type = CONFIG_TYPE_FLOAT,
+				 .min = 0.f,
+				 .max = 1.f,
+				 .help = "Chat background opacity",
+				 .name = "Chat background opacity",
+			 });
+	list_add(&config_settings,
+			 &(struct config_setting) {
+				 .value = &settings_tmp.bg_tile,
+				 .type = CONFIG_TYPE_INT,
+				 .min = 0,
+				 .max = 1,
+				 .name = "Tile background",
+				 .help = "Background will be stretched if disabled",
+			 });
+	list_add(&config_settings,
+			 &(struct config_setting) {
+				 .value = &settings_tmp.bg_tile_speed,
+				 .type = CONFIG_TYPE_FLOAT,
+				 .min = 0,
+				 .max = 2,
+				 .name = "Tile speed",
+				 .help = "The speed at which the tiles move",
+			 });
+	list_add(&config_settings,
+			 &(struct config_setting) {
+				 .value = &settings_tmp.ui_accent_r,
+				 .type = CONFIG_TYPE_INT,
+				 .min = 0,
+				 .max = 255,
+				 .name = "UI Accent: Red",
+				 .help = "UI accent color (red)",
+			 });
+	list_add(&config_settings,
+			 &(struct config_setting) {
+				 .value = &settings_tmp.ui_accent_g,
+				 .type = CONFIG_TYPE_INT,
+				 .min = 0,
+				 .max = 255,
+				 .name = "UI Accent: Green",
+				 .help = "UI accent color (green)",
+			 });
+	list_add(&config_settings,
+			 &(struct config_setting) {
+				 .value = &settings_tmp.ui_accent_b,
+				 .type = CONFIG_TYPE_INT,
+				 .min = 0,
+				 .max = 255,
+				 .name = "UI Accent: Blue",
+				 .help = "UI accent color (blue)",
+			 });
+	list_add(&config_settings,
+			 &(struct config_setting) {
+				 .value = &settings_tmp.lighten_colors,
+				 .type = CONFIG_TYPE_INT,
+				 .min = 0,
+				 .max = 255,
+				 .name = "Lighten colors",
+				 .help = "Makes in-game team colors in the HUD brighter",
+			 });
+	list_add(&config_settings,
+			 &(struct config_setting) {
+				 .value = &settings_tmp.show_names_in_spec,
+				 .type = CONFIG_TYPE_INT,
+				 .min = 0,
+				 .max = 1,
+				 .name = "Show names in spectator",
+				 .help = "Displays player names in spectator",
+			 });
+	list_add(&config_settings,
+			 &(struct config_setting) {
+				 .value = &settings_tmp.hud_shadows,
+				 .type = CONFIG_TYPE_INT,
+				 .min = 0,
+				 .max = 1,
+				 .name = "HUD shadows",
+				 .help = "Enables text shadows in various UI elements",
+			 });
+	list_add(&config_settings,
+			 &(struct config_setting) {
+				 .value = &settings_tmp.chat_flip_on_open,
+				 .type = CONFIG_TYPE_INT,
+				 .min = 0,
+				 .max = 1,
+				 .help = "Flip chat order when open",
+				 .name = "Reverse chat on open",
+			 });
+	list_add(&config_settings,
+			 &(struct config_setting) {
+				 .value = &settings_tmp.chat_spacing,
+				 .type = CONFIG_TYPE_INT,
+				 .min = 0,
+				 .max = 8,
+				 .help = "Spacing between messages in chat",
+				 .name = "Chat spacing",
 			 });
 }

@@ -107,7 +107,7 @@ static void printJoinMsg(int team, char* name) {
 	char s[64];
 	char team_color = team_color_char(team);
 	sprintf(s, "%c%s\6 joined the %c%s\6 team", team_color, name, team_color, t);
-	chat_add(0, 0x0000FF, s);
+	chat_add(0, hud_accent_color(), s);
 }
 
 void read_PacketMapChunk(void* data, int len) {
@@ -427,7 +427,7 @@ void read_PacketPlayerLeft(void* data, int len) {
 		char team_color = team_color_char(players[p->player_id].team);
 
 		sprintf(s, "%c%s\6 disconnected", team_color, players[p->player_id].name);
-		chat_add(0, 0x0000FF, s);
+		chat_add(0, hud_accent_color(), s);
 	}
 }
 
@@ -750,7 +750,7 @@ void read_PacketIntelCapture(void* data, int len) {
 		}
 		sound_create(SOUND_LOCAL, p->winning ? &sound_horn : &sound_pickup, 0.0F, 0.0F, 0.0F);
 		players[p->player_id].score += 10;
-		chat_add(0, 0x0000FF, capture_str);
+		chat_add(0, hud_accent_color(), capture_str);
 		if(p->winning) {
 			char* name = NULL;
 
@@ -788,7 +788,7 @@ void read_PacketIntelDrop(void* data, int len) {
 				sprintf(drop_str, "\2%s\6 has dropped the \1%s\6 Intel", players[p->player_id].name, gamestate.team_1.name);
 				break;
 		}
-		chat_add(0, 0x0000FF, drop_str);
+		chat_add(0, hud_accent_color(), drop_str);
 	}
 }
 
@@ -808,7 +808,7 @@ void read_PacketIntelPickup(void* data, int len) {
 				sprintf(pickup_str, "\2%s\6 has the \1%s\6 Intel", players[p->player_id].name, gamestate.team_1.name);
 				break;
 		}
-		chat_add(0, 0x0000FF, pickup_str);
+		chat_add(0, hud_accent_color(), pickup_str);
 		sound_create(SOUND_LOCAL, &sound_pickup, 0.0F, 0.0F, 0.0F);
 	}
 }
@@ -830,7 +830,7 @@ void read_PacketTerritoryCapture(void* data, int len) {
 			char team_color = team_color_char(p->team);
 
 			sprintf(capture_str, "%c%s\6 have captured %c%c", team_color, team_n, x, y);
-			chat_add(0, 0x0000FF, capture_str);
+			chat_add(0, hud_accent_color(), capture_str);
 			if(p->winning) {
 				sprintf(capture_str, "%s Team Wins!", team_n);
 				chat_showpopup(capture_str, 5.0F, rgb(255, 0, 0));

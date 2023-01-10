@@ -334,6 +334,12 @@ void display() {
 										  cubes[amount - 1].x + 1, cubes[amount - 1].y + 1, cubes[amount - 1].z + 1,
 										  cubes[amount - 1].x,	   cubes[amount - 1].y,		cubes[amount - 1].z + 1,
 										  cubes[amount - 1].x,	   cubes[amount - 1].y + 1, cubes[amount - 1].z + 1};
+					if(local_player_drag_active) {
+						glLineWidth(8);
+					} else {
+						glLineWidth(1);
+					}
+
 					glEnableClientState(GL_VERTEX_ARRAY);
 					glVertexPointer(3, GL_SHORT, 0, vertices);
 					glDrawArrays(GL_LINES, 0, 24);
@@ -625,7 +631,7 @@ void keys(struct window_instance* window, int key, int scancode, int action, int
 		free(pic_data);
 
 		sprintf(pic_name, "Saved screenshot as screenshots/%ld.png", (long)pic_time);
-		chat_add(0, 0x0000FF, pic_name);
+		chat_add(0, 0x00FFFF, pic_name);
 	}
 
 	if(key == WINDOW_KEY_SAVE_MAP && action == WINDOW_PRESS) { // save map
@@ -637,7 +643,7 @@ void keys(struct window_instance* window, int key, int scancode, int action, int
 		map_save_file(save_name);
 
 		sprintf(save_name, "Saved map as vxl/%ld.vxl", (long)save_time);
-		chat_add(0, 0x0000FF, save_name);
+		chat_add(0, 0x00FFFF, save_name);
 	}
 }
 

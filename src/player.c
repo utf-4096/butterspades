@@ -622,7 +622,7 @@ void player_collision(const struct Player* p, Ray* ray, struct player_intersecti
 void player_render(struct Player* p, int id) {
 	kv6_calclight(p->pos.x, p->pos.y, p->pos.z);
 
-	if(camera_mode == CAMERAMODE_SPECTATOR && p->team != TEAM_SPECTATOR && !cameracontroller_bodyview_mode) {
+	if(camera_mode == CAMERAMODE_SPECTATOR && p->team != TEAM_SPECTATOR && !cameracontroller_bodyview_mode && settings.show_names_in_spec) {
 		matrix_push(matrix_model);
 		matrix_translate(matrix_model, p->pos.x, p->physics.eye.y + player_height(p) + 1.25F, p->pos.z);
 		matrix_rotate(matrix_model, camera_rot_x / PI * 180.0F + 180.0F, 0.0F, 1.0F, 0.0F);

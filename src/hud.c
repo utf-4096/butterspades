@@ -70,6 +70,10 @@ void hud_init() {
 	hud_change(&hud_serverlist);
 }
 
+inline int hud_accent_color() {
+	return rgb(settings.ui_accent_r, settings.ui_accent_g, settings.ui_accent_b);
+}
+
 static int mu_text_height(mu_Font font) {
 	return 16.F;
 }
@@ -563,6 +567,34 @@ static int chat_messages = 16;
 static void hud_render_message(unsigned int channel, unsigned int k) {
 	char *c;
 	float l = font_length(16.F, chat[channel][k + 1]);
+
+	float x, y, shadow = 0.F;
+
+	if(channel == 0) {
+		x = 16.F;
+		if(chat_input_mode != CHAT_NO_INPUT && settings.chat_flip_on_open) {
+			y = 75.F + ((k + 2.F) * (16.F + settings.chat_spacing)) - settings.chat_spacing / 2.F;
+		} else {
+			y = 75.F + ((chat_messages - k + 1.F) * (16.F + settings.chat_spacing)) - settings.chat_spacing / 2.F;
+		}
+	} else {
+		y = settings.window_height - 22.0F - 10.0F * k - k * 8.F;
+		shadow = .4F;
+	}
+
+	if(channel == 0 && *chat[channel][k + 1] != '\0') {
+		glColor3ub(red(chat_color[channel][k + 1]), green(chat_color[channel][k + 1]), blue(chat_color[channel][k + 1]));
+		glLineWidth(3);
+		glBegin(GL_LINES);
+
+		glVertex2f(x - 11.F, y + settings.chat_spacing / 2.F + 1.F);
+		glVertex2f(x - 11.F, floor(y - 16.F - settings.chat_spacing / 2 + 1.F));
+
+		glEnd();
+		glLineWidth(1);
+		glColor3ub(255, 255, 255);
+	}
+
 	for(c = chat[channel][k + 1]; *c != '\0'; c++) {
 		// Chat color
 		switch(*c) {
@@ -579,21 +611,9 @@ static void hud_render_message(unsigned int channel, unsigned int k) {
 		single[0] = *c;
 		single[1] = '\0';
 
-		if(channel == 0) {
-			// Chat
-			if(chat_input_mode != CHAT_NO_INPUT && settings.chat_flip_on_open) {
-				hud_font_render(11.0F + l - font_length(16.0F, c), 76.F + ((k + 2.F) * 16.F), 16.0F, single, 0.F);
-			} else {
-				hud_font_render(11.0F + l - font_length(16.0F, c), 76.F + ((chat_messages - k + 1.F) * 16.F), 16.0F, single, 0.F);
-			}
-		} else if(channel == 1) {
-			// Killfeed
-			hud_font_render(11.0F + l - font_length(16.0F, c), settings.window_height - 22.0F - 10.0F * k - k * 8.F,
-						16.0F, single, 0.25F);
-		}
+		hud_font_render(x + l - font_length(16.0F, c), y, 16.F, single, shadow);
 	}
 }
-
 
 static void hud_ingame_render(mu_Context* ctx, float scalex, float scalef) {
 	// window_mousemode(camera_mode==CAMERAMODE_SELECTION?WINDOW_CURSOR_ENABLED:WINDOW_CURSOR_DISABLED);
@@ -1012,7 +1032,7 @@ static void hud_ingame_render(mu_Context* ctx, float scalex, float scalef) {
 		if(camera_mode != CAMERAMODE_SELECTION) {
 			font_select(FONT_FIXEDSYS);
 
-			if(settings.chat_shadow) {
+			if(settings.chat_shadow != 0.f) {
 				float chat_width = 0;
 				int chat_height = 0;
 				for(int k = 0; k < chat_messages; k++) {
@@ -1021,29 +1041,47 @@ static void hud_ingame_render(mu_Context* ctx, float scalex, float scalef) {
 						chat_width = fmaxf(font_length(16.0F, chat[0][k + 1]), chat_width);
 						chat_height = k + 1;
 					}
+
+				}
+
+				if(chat != CHAT_NO_INPUT) {
+					chat_width = fmaxf(chat_width, font_length(16.0F, chat[0][0]));
 				}
 
 				if(chat_input_mode != CHAT_NO_INPUT) {
-					chat_width = fminf(1024.F, settings.window_width) - 3.F - 20.F;
-					chat_messages = min(127, floor((settings.window_height - 100.F) / 16.F));
+					chat_messages = min(127, floor((settings.window_height - 100.F) / (16.F + settings.chat_spacing)));
 					chat_height = chat_messages;
 				} else {
 					chat_messages = 12;
 				}
 
 				if(chat_height > 0) {
-					glColor4f(0, 0, 0, 0.5F);
+					float x = 3.F,
+						  y = 76.F + ((chat_messages + 1.F) * (16.F + settings.chat_spacing)),
+						  w = chat_width + 16.0F,
+						  h = (16.F + settings.chat_spacing) * chat_height;
+
+					mu_Color color = mu_accent_color(0.3F, settings.chat_shadow * 255);
+					glColor4ub(color.r, color.g, color.b, color.a);
 					glEnable(GL_BLEND);
 					glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-					if(chat_input_mode == CHAT_NO_INPUT) {
-						texture_draw_empty(3.0F, 69.F + (chat_messages + 2.F) * 16.F,
-										   chat_width + 16.0F, 16.0F * chat_height + 12.0F);
-					} else {
-						texture_draw_empty(3.0F, 69.F + (chat_messages + 2.F) * 16.F,
-										   chat_width + 16.0F, 16.0F * chat_height + 12.0F);
 
+					texture_draw_empty(x, y, w, h);
+					if(chat_input_mode != CHAT_NO_INPUT) {
 						texture_draw_empty(3.0F, 90.F, chat_width + 16.0F, 42.F);
+
+						color = mu_accent_color(1.F, 255);
+						glColor4ub(color.r, color.g, color.b, color.a);
+						glLineWidth(3);
+						glBegin(GL_LINES);
+
+						glVertex2f(3.0F, 90.F);
+						glVertex2f(chat_width + 19.F, 90.F);
+
+						glEnd();
 					}
+
+
 					glDisable(GL_BLEND);
 				}
 			}
@@ -1379,14 +1417,35 @@ static void hud_ingame_render(mu_Context* ctx, float scalex, float scalef) {
 		glColor3f(1.0F, 1.0F, 1.0F);
 	}
 
-	if(settings.show_fps) {
+	if(settings.show_fps && chat_input_mode == CHAT_NO_INPUT) {
+		mu_Color color = mu_accent_color(0.3F, settings.chat_shadow * 255);
+		glColor4ub(color.r, color.g, color.b, color.a);
+
+		glEnable(GL_BLEND);
+		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+		texture_draw_empty(5.F, 84.F, 100.F, 36.F);
+
+		color = mu_accent_color(1.F, 255);
+		glColor3ub(color.r, color.g, color.b);
+		glLineWidth(3);
+		glBegin(GL_LINES);
+
+		glVertex2f(5.F, 84.F);
+		glVertex2f(5.F, 48.F);
+
+		glEnd();
+		glLineWidth(1);
+		glColor3ub(255, 255, 255);
+		glDisable(GL_BLEND);
+
 		char debug_str[16];
 		font_select(FONT_FIXEDSYS);
 		glColor3f(1.0F, 1.0F, 1.0F);
 		sprintf(debug_str, "%ims", network_ping());
-		font_render(11.0F * scalef, settings.window_height * 0.33F, 16.0F, debug_str);
-		sprintf(debug_str, "%i", (int)fps);
-		font_render(11.0F * scalef, settings.window_height * 0.33F - 20.0F * scalef, 16.0F, debug_str);
+		font_render(17.0F, 82.F, 16.0F, debug_str);
+		sprintf(debug_str, "%i fps", (int)fps);
+		font_render(17.0F, 66.F, 16.0F, debug_str);
 	}
 
 #ifdef USE_TOUCH
@@ -1728,7 +1787,6 @@ static void hud_ingame_keyboard(int key, int action, int mods, int internal) {
 				} else {
 					window_textinput(1);
 					chat_input_mode = CHAT_TEAM_INPUT;
-					chat[0][0][0] = 0;
 				}
 			}
 
@@ -1755,7 +1813,7 @@ static void hud_ingame_keyboard(int key, int action, int mods, int internal) {
 				sound_volume(settings.volume / 10.0F);
 				char volstr[64];
 				sprintf(volstr, "Volume: %i", settings.volume);
-				chat_add(0, 0x0000FF, volstr);
+				chat_add(0, 0x00FFFF, volstr);
 			}
 
 			if(key == WINDOW_KEY_COMMAND) {
@@ -1767,7 +1825,6 @@ static void hud_ingame_keyboard(int key, int action, int mods, int internal) {
 			if(key == WINDOW_KEY_CHAT) {
 				window_textinput(1);
 				chat_input_mode = CHAT_ALL_INPUT;
-				chat[0][0][0] = 0;
 			}
 
 			if((key == WINDOW_KEY_CURSOR_UP || key == WINDOW_KEY_CURSOR_DOWN || key == WINDOW_KEY_CURSOR_LEFT
@@ -2018,6 +2075,7 @@ static void hud_ingame_keyboard(int key, int action, int mods, int internal) {
 			if(key == WINDOW_KEY_HISTORY_NEXT && chat_history_pos> 0) {
 				strcpy(chat[0][0], chat[2][--chat_history_pos]);
 			}
+
 			if(key == WINDOW_KEY_ESCAPE || key == WINDOW_KEY_ENTER) {
 				chat_history_pos = 0;
 				if(key == WINDOW_KEY_ENTER && strlen(chat[0][0]) > 0) {
@@ -2032,6 +2090,7 @@ static void hud_ingame_keyboard(int key, int action, int mods, int internal) {
 				}
 				window_textinput(0);
 				chat_input_mode = CHAT_NO_INPUT;
+				chat[0][0][0] = 0;
 			}
 			if(key == WINDOW_KEY_BACKSPACE) {
 				size_t text_len = strlen(chat[0][0]);

@@ -49,6 +49,7 @@ extern struct RENDER_OPTIONS {
 	int ui_accent_g;
 	int ui_accent_b;
 	int lighten_colors;
+	int show_names_in_spec;
 	int hud_shadows;
 	int greedy_meshing;
 	int vsync;
@@ -62,8 +63,9 @@ extern struct RENDER_OPTIONS {
 	int smooth_fog;
 	float camera_fov;
 	int hold_down_sights;
-	int chat_shadow;
+	float chat_shadow;
 	int chat_flip_on_open;
+	int chat_spacing;
 } settings, settings_tmp;
 
 extern struct list config_keys;
