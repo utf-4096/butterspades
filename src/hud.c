@@ -1505,9 +1505,7 @@ static void hud_ingame_scroll(double yoffset) {
 			h = 0;
 		players[local_player_id].held_item = h;
 		sound_create(SOUND_LOCAL, &sound_switch, 0.0F, 0.0F, 0.0F);
-		players[local_player_id].item_disabled = window_time();
-		players[local_player_id].items_show_start = window_time();
-		players[local_player_id].items_show = 1;
+		player_on_held_item_change(players + local_player_id);
 	}
 }
 
@@ -1798,9 +1796,7 @@ static void hud_ingame_keyboard(int key, int action, int mods, int internal) {
 				int tmp = players[local_player_id].held_item;
 				players[local_player_id].held_item = local_player_lasttool;
 				local_player_lasttool = tmp;
-				players[local_player_id].item_disabled = window_time();
-				players[local_player_id].items_show_start = window_time();
-				players[local_player_id].items_show = 1;
+				player_on_held_item_change(players + local_player_id);
 			}
 
 			if(key == WINDOW_KEY_VOLUME_UP) {
@@ -1913,9 +1909,7 @@ static void hud_ingame_keyboard(int key, int action, int mods, int internal) {
 
 				if(tool_switch) {
 					sound_create(SOUND_LOCAL, &sound_switch, 0.0F, 0.0F, 0.0F);
-					players[local_player_id].item_disabled = window_time();
-					players[local_player_id].items_show_start = window_time();
-					players[local_player_id].items_show = 1;
+					player_on_held_item_change(players + local_player_id);
 				}
 			}
 
