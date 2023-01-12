@@ -1782,7 +1782,7 @@ static void hud_ingame_keyboard(int key, int action, int mods, int internal) {
 			} else if(key == WINDOW_KEY_YES) {
 				if(show_exit) {
 					hud_change(&hud_serverlist);
-				} else {
+				} else if(!window_key_down(WINDOW_KEY_CROUCH)) {
 					window_textinput(1);
 					chat_input_mode = CHAT_TEAM_INPUT;
 				}
@@ -1812,13 +1812,13 @@ static void hud_ingame_keyboard(int key, int action, int mods, int internal) {
 				chat_add(0, 0x00FFFF, volstr);
 			}
 
-			if(key == WINDOW_KEY_COMMAND) {
+			if(key == WINDOW_KEY_COMMAND && !window_key_down(WINDOW_KEY_CROUCH)) {
 				window_textinput(1);
 				chat_input_mode = CHAT_ALL_INPUT;
 				strcpy(chat[0][0], "/");
 			}
 
-			if(key == WINDOW_KEY_CHAT) {
+			if(key == WINDOW_KEY_CHAT && !window_key_down(WINDOW_KEY_CROUCH)) {
 				window_textinput(1);
 				chat_input_mode = CHAT_ALL_INPUT;
 			}

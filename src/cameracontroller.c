@@ -160,7 +160,7 @@ void cameracontroller_fps(float dt) {
 	}
 
 	if(chat_input_mode != CHAT_NO_INPUT) {
-		players[local_player_id].input.keys.packed = 0;
+		players[local_player_id].input.keys.packed &= 0b00100000;
 		players[local_player_id].input.buttons.packed = 0;
 	}
 
