@@ -566,9 +566,7 @@ static int chat_messages = 16;
 
 static void hud_render_message(unsigned int channel, unsigned int k) {
 	char *c;
-	float l = font_length(16.F, chat[channel][k + 1]);
-
-	float x, y, shadow = 0.F;
+	float x, y;
 
 	if(channel == 0) {
 		x = 16.F;
@@ -579,7 +577,6 @@ static void hud_render_message(unsigned int channel, unsigned int k) {
 		}
 	} else {
 		y = settings.window_height - 22.0F - 10.0F * k - k * 8.F;
-		shadow = .4F;
 	}
 
 	if(channel == 0 && *chat[channel][k + 1] != '\0') {
@@ -597,7 +594,6 @@ static void hud_render_message(unsigned int channel, unsigned int k) {
 
 
 	char buffer[512];
-
 	unsigned int i = 0;
 	for(c = chat[channel][k + 1]; *c != '\0'; c++) {
 		// Chat color
@@ -611,7 +607,7 @@ static void hud_render_message(unsigned int channel, unsigned int k) {
 		buffer[i] = '\0';
 		float len = font_length(16.F, buffer) - 2.F;
 		if(channel != 0) {
-			hud_font_render(x, y, 16.F, buffer, shadow);
+			hud_font_render(x, y, 16.F, buffer, .4F);
 		} else {
 			font_render(x, y, 16.F, buffer);
 		}
