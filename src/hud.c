@@ -1417,22 +1417,22 @@ static void hud_ingame_render(mu_Context* ctx, float scalex, float scalef) {
 		glColor3f(1.0F, 1.0F, 1.0F);
 	}
 
-	if(settings.show_fps && chat_input_mode == CHAT_NO_INPUT) {
+	if(settings.show_fps) {
 		mu_Color color = mu_accent_color(0.3F, settings.chat_shadow * 255);
 		glColor4ub(color.r, color.g, color.b, color.a);
 
 		glEnable(GL_BLEND);
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-		texture_draw_empty(5.F, 84.F, 100.F, 36.F);
+		texture_draw_empty(settings.window_width - 105.F, settings.window_height / 2.F - 18.F + 84.F, 100.F, 36.F);
 
 		color = mu_accent_color(1.F, 255);
 		glColor3ub(color.r, color.g, color.b);
 		glLineWidth(3);
 		glBegin(GL_LINES);
 
-		glVertex2f(5.F, 84.F);
-		glVertex2f(5.F, 48.F);
+		glVertex2f(settings.window_width - 5.F, floor(settings.window_height / 2.F - 18.F + 84.F));
+		glVertex2f(settings.window_width - 5.F, floor(settings.window_height / 2.F - 18.F + 48.F));
 
 		glEnd();
 		glLineWidth(1);
@@ -1443,9 +1443,9 @@ static void hud_ingame_render(mu_Context* ctx, float scalex, float scalef) {
 		font_select(FONT_FIXEDSYS);
 		glColor3f(1.0F, 1.0F, 1.0F);
 		sprintf(debug_str, "%ims", network_ping());
-		font_render(17.0F, 82.F, 16.0F, debug_str);
+		font_render(settings.window_width - 17.0F - font_length(16.F, debug_str), settings.window_height / 2.F - 18.F + 82.F, 16.0F, debug_str);
 		sprintf(debug_str, "%i fps", (int)fps);
-		font_render(17.0F, 66.F, 16.0F, debug_str);
+		font_render(settings.window_width - 17.0F - font_length(16.F, debug_str), settings.window_height / 2.F - 18.F + 66.F, 16.0F, debug_str);
 	}
 
 #ifdef USE_TOUCH
