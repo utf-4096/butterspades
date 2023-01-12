@@ -235,18 +235,18 @@ void cameracontroller_spectator(float dt) {
 
 	float len = sqrt(x * x + y * y + z * z);
 	if(len > 0.0F) {
-		camera_movement_x = (x / len) * camera_speed * dt;
-		camera_movement_y = (y / len) * camera_speed * dt;
-		camera_movement_z = (z / len) * camera_speed * dt;
+		camera_movement_x = (x / len) * (camera_speed * settings.spectator_speed) * dt;
+		camera_movement_y = (y / len) * (camera_speed * settings.spectator_speed) * dt;
+		camera_movement_z = (z / len) * (camera_speed * settings.spectator_speed) * dt;
 	}
 
-	if(abs(camera_movement_x) < 1.0F) {
+	if(abs(camera_movement_x) < 1.0F * settings.spectator_speed) {
 		camera_movement_x *= pow(0.0025F, dt);
 	}
-	if(abs(camera_movement_y) < 1.0F) {
+	if(abs(camera_movement_y) < 1.0F * settings.spectator_speed) {
 		camera_movement_y *= pow(0.0025F, dt);
 	}
-	if(abs(camera_movement_z) < 1.0F) {
+	if(abs(camera_movement_z) < 1.0F * settings.spectator_speed) {
 		camera_movement_z *= pow(0.0025F, dt);
 	}
 

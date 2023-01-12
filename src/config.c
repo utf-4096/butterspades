@@ -99,6 +99,7 @@ void config_save() {
 	config_seti("client", "chat_flip_on_open", settings.chat_flip_on_open);
 	config_seti("client", "show_player_arms", settings.player_arms);
 	config_seti("client", "chat_spacing", settings.chat_spacing);
+	config_setf("client", "spectator_speed", settings.spectator_speed);
 
 	for(int k = 0; k < list_size(&config_keys); k++) {
 		struct config_key_pair* e = list_get(&config_keys, k);
@@ -195,6 +196,8 @@ static int config_read_key(void* user, const char* section, const char* name, co
 			settings.lighten_colors = max(0, min(255, atoi(value)));
 		} else if(!strcmp(name, "hud_shadows")) {
 			settings.hud_shadows = atoi(value);
+		} else if(!strcmp(name, "spectator_speed")) {
+			settings.spectator_speed = max(0.1F, min(4.F, atof(value)));
 		}
 	}
 	if(!strcmp(section, "controls")) {
@@ -725,5 +728,14 @@ void config_reload() {
 				 .max = 8,
 				 .help = "Spacing between messages in chat",
 				 .name = "Chat spacing",
+			 });
+	list_add(&config_settings,
+			 &(struct config_setting) {
+				 .value = &settings_tmp.spectator_speed,
+				 .type = CONFIG_TYPE_FLOAT,
+				 .min = 0.1F,
+				 .max = 4.F,
+				 .help = "Speed of movement in spectator",
+				 .name = "Spectator speed",
 			 });
 }

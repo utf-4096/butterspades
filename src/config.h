@@ -66,6 +66,7 @@ extern struct RENDER_OPTIONS {
 	float chat_shadow;
 	int chat_flip_on_open;
 	int chat_spacing;
+	float spectator_speed;
 } settings, settings_tmp;
 
 extern struct list config_keys;
