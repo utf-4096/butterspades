@@ -595,8 +595,27 @@ static void hud_render_message(unsigned int channel, unsigned int k) {
 		glColor3ub(255, 255, 255);
 	}
 
+
+	char buffer[512];
+
+	unsigned int i = 0;
 	for(c = chat[channel][k + 1]; *c != '\0'; c++) {
 		// Chat color
+		if(*c > 7) {
+			buffer[i++] = *c;
+			if(*(c + 1) != '\0') {
+				continue;
+			}
+		}
+
+		buffer[i] = '\0';
+		float len = font_length(16.F, buffer) - 2.F;
+		if(channel != 0) {
+			hud_font_render(x, y, 16.F, buffer, shadow);
+		} else {
+			font_render(x, y, 16.F, buffer);
+		}
+
 		switch(*c) {
 			case '\1': glColor3ub(LIGHTEN(gamestate.team_1.red), LIGHTEN(gamestate.team_1.green), LIGHTEN(gamestate.team_1.blue)); break; // Team1 color
 			case '\2': glColor3ub(LIGHTEN(gamestate.team_2.red), LIGHTEN(gamestate.team_2.green), LIGHTEN(gamestate.team_2.blue)); break; // Team2 color
@@ -607,11 +626,8 @@ static void hud_render_message(unsigned int channel, unsigned int k) {
 			case '\7': glColor3ub(120, 120, 120); break; // Gray
 		}
 
-		char single[2];
-		single[0] = *c;
-		single[1] = '\0';
-
-		hud_font_render(x + l - font_length(16.0F, c), y, 16.F, single, shadow);
+		x += len;
+		i = 0;
 	}
 }
 
