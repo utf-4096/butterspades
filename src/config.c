@@ -95,7 +95,7 @@ void config_save() {
 	config_seti("client", "ambient_occlusion", settings.ambient_occlusion);
 	config_setf("client", "camera_fov", settings.camera_fov);
 	config_seti("client", "hold_down_sights", settings.hold_down_sights);
-	config_seti("client", "chat_shadow", settings.chat_shadow);
+	config_setf("client", "chat_shadow", settings.chat_shadow);
 	config_seti("client", "chat_flip_on_open", settings.chat_flip_on_open);
 	config_seti("client", "show_player_arms", settings.player_arms);
 	config_seti("client", "chat_spacing", settings.chat_spacing);
