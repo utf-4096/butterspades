@@ -37,6 +37,8 @@
 #include "particle.h"
 #include "texture.h"
 #include "chunk.h"
+#include "gmi.h"
+#include "config.h"
 
 void (*packets[256])(void* data, int len) = {NULL};
 
@@ -135,6 +137,11 @@ void read_PacketChatMessage(void* data, int len) {
 			chat_showpopup(p->message, 5.0F, rgb(255, 255, 0));
 			return;
 		case CHAT_SYSTEM:
+			// try to determine gamemode
+			if(settings.gmi && gmi_mode == GMI_MODE_UNDETECTED) {
+				gmi_mode_detect_message(p->message);
+			}
+
 			if(p->player_id == 255) {
 				strncpy(network_custom_reason, p->message, 16);
 				return; // dont add message to chat
@@ -179,6 +186,7 @@ void read_PacketChatMessage(void* data, int len) {
 			break;
 		default: color = 0xFFFFFF; break;
 	}
+
 	chat_add(0, color, m);
 }
 
@@ -997,6 +1005,7 @@ int network_connect_sub(char* ip, int port, int version) {
 	if(enet_host_service(client, &event, 2500) > 0 && event.type == ENET_EVENT_TYPE_CONNECT) {
 		network_received_packets = 0;
 		network_connected = 1;
+		gmi_mode = GMI_MODE_UNDETECTED;
 
 		float start = window_time();
 		while(window_time() - start < 1.0F) { // listen connection for 1s, check if server disconnects
