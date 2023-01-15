@@ -1,3 +1,6 @@
+#ifndef GMI_H
+#define GMI_H
+
 enum gmi_mode {
 	GMI_MODE_UNDETECTED,
 	GMI_MODE_UNKNOWN,
@@ -9,3 +12,5 @@ enum gmi_mode {
 extern enum gmi_mode gmi_mode;
 extern unsigned int gmi_tdm_kills[2];
 void gmi_mode_detect_message(char* message);
+
+#endif
