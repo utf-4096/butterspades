@@ -39,6 +39,19 @@ struct list config_settings;
 struct list config_file, config_overlay;
 int config_used_overlay = 0;
 
+#define IMPORT_SETTING(key, ini, _value)        \
+    if(!strcmp(name, #ini)) {                   \
+        key = _value;                           \
+        return 0;                               \
+    }                                           \
+
+#define IMPORT_SETTING_STR(key, ini)            \
+    if(!strcmp(name, #ini)) {                   \
+        strcpy(key, value);                     \
+        return 0;                               \
+    }                                           \
+
+
 static int config_compare_overlay(const void* obj, const void* ref) {
 	return !strcmp(*(const char**)obj, (const char*)ref);
 }
@@ -152,79 +165,43 @@ static int config_read_key(void* user, const char* section, const char* name, co
 	}
 
 	if(!strcmp(section, "client")) {
-		if(!strcmp(name, "name")) {
-			strcpy(settings.name, value);
-		} else if(!strcmp(name, "xres")) {
-			settings.window_width = atoi(value);
-		} else if(!strcmp(name, "yres")) {
-			settings.window_height = atoi(value);
-		} else if(!strcmp(name, "windowed")) {
-			settings.fullscreen = !atoi(value);
-		} else if(!strcmp(name, "multisamples")) {
-			settings.multisamples = atoi(value);
-		} else if(!strcmp(name, "greedy_meshing")) {
-			settings.greedy_meshing = atoi(value);
-		} else if(!strcmp(name, "vsync")) {
-			settings.vsync = atoi(value);
-		} else if(!strcmp(name, "mouse_sensitivity")) {
-			settings.mouse_sensitivity = atof(value);
-		} else if(!strcmp(name, "show_news")) {
-			settings.show_news = atoi(value);
-		} else if(!strcmp(name, "vol")) {
-			settings.volume = max(min(atoi(value), 10), 0);
-			sound_volume(settings.volume / 10.0F);
-		} else if(!strcmp(name, "show_fps")) {
-			settings.show_fps = atoi(value);
-		} else if(!strcmp(name, "voxlap_models")) {
-			settings.voxlap_models = atoi(value);
-		} else if(!strcmp(name, "force_displaylist")) {
-			settings.force_displaylist = atoi(value);
-		} else if(!strcmp(name, "inverty")) {
-			settings.invert_y = atoi(value);
-		} else if(!strcmp(name, "smooth_fog")) {
-			settings.smooth_fog = atoi(value);
-		} else if(!strcmp(name, "ambient_occlusion")) {
-			settings.ambient_occlusion = atoi(value);
-		} else if(!strcmp(name, "camera_fov")) {
-			settings.camera_fov = fmax(fmin(atof(value), CAMERA_MAX_FOV), CAMERA_DEFAULT_FOV);
-		} else if(!strcmp(name, "hold_down_sights")) {
-			settings.hold_down_sights = atoi(value);
-		} else if(!strcmp(name, "chat_shadow")) {
-			settings.chat_shadow = fmax(0, fmin(1.f, atof(value)));
-		} else if(!strcmp(name, "chat_flip_on_open")) {
-			settings.chat_flip_on_open = atoi(value);
-		} else if(!strcmp(name, "show_player_arms")) {
-			settings.player_arms = atoi(value);
-		} else if(!strcmp(name, "chat_spacing")) {
-			settings.chat_spacing = atoi(value);
-		} else if(!strcmp(name, "last_address")) {
-			strcpy(settings.last_address, value);
-		} else if(!strcmp(name, "bg_tile")) {
-			settings.bg_tile = atoi(value);
-		} else if(!strcmp(name, "show_names_in_spec")) {
-			settings.show_names_in_spec = atoi(value);
-		} else if(!strcmp(name, "bg_tile_speed")) {
-			settings.bg_tile_speed = fmax(0.0F, atof(value));
-		} else if(!strcmp(name, "ui_accent_r")) {
-			settings.ui_accent_r = max(0, min(255, atoi(value)));
-		} else if(!strcmp(name, "ui_accent_g")) {
-			settings.ui_accent_g = max(0, min(255, atoi(value)));
-		} else if(!strcmp(name, "ui_accent_b")) {
-			settings.ui_accent_b = max(0, min(255, atoi(value)));
-		} else if(!strcmp(name, "lighten_colors")) {
-			settings.lighten_colors = max(0, min(255, atoi(value)));
-		} else if(!strcmp(name, "hud_shadows")) {
-			settings.hud_shadows = atoi(value);
-		} else if(!strcmp(name, "spectator_speed")) {
-			settings.spectator_speed = max(0.1F, min(4.F, atof(value)));
-		} else if(!strcmp(name, "iron_sight")) {
-			settings.iron_sight = atoi(value);
-		} else if(!strcmp(name, "gmi")) {
-			settings.gmi = atoi(value);
-		} else if(!strcmp(name, "disable_raw_input")) {
-			settings.disable_raw_input = atoi(value);
-		}
+		IMPORT_SETTING_STR(settings.name, name);
+		IMPORT_SETTING(settings.window_width, xres, atoi(value));
+		IMPORT_SETTING(settings.window_height, yres, atoi(value));
+		IMPORT_SETTING(settings.fullscreen, windowed, !atoi(value));
+		IMPORT_SETTING(settings.multisamples, multisamples, atoi(value));
+		IMPORT_SETTING(settings.greedy_meshing, greedy_meshing, atoi(value));
+		IMPORT_SETTING(settings.vsync, vsync, atoi(value));
+		IMPORT_SETTING(settings.mouse_sensitivity, mouse_sensitivity, atof(value));
+		IMPORT_SETTING(settings.show_news, show_news, atoi(value));
+		if(!strcmp(name, "vol")) { settings.volume = max(min(atoi(value), 10), 0); sound_volume(settings.volume / 10.0F); }
+		IMPORT_SETTING(settings.show_fps, show_fps, atoi(value));
+		IMPORT_SETTING(settings.voxlap_models, voxlap_models, atoi(value));
+		IMPORT_SETTING(settings.force_displaylist, force_displaylist, atoi(value));
+		IMPORT_SETTING(settings.invert_y, inverty, atoi(value));
+		IMPORT_SETTING(settings.smooth_fog, smooth_fog, atoi(value));
+		IMPORT_SETTING(settings.ambient_occlusion, ambient_occlusion, atoi(value));
+		IMPORT_SETTING(settings.camera_fov, camera_fov, fmax(fmin(atof(value), CAMERA_MAX_FOV), CAMERA_DEFAULT_FOV));
+		IMPORT_SETTING(settings.hold_down_sights, hold_down_sights, atoi(value));
+		IMPORT_SETTING(settings.chat_shadow, chat_shadow, fmax(0, fmin(1.f, atof(value))));
+		IMPORT_SETTING(settings.chat_flip_on_open, chat_flip_on_open, atoi(value));
+		IMPORT_SETTING(settings.player_arms, show_player_arms, atoi(value));
+		IMPORT_SETTING(settings.chat_spacing, chat_spacing, atoi(value));
+		IMPORT_SETTING_STR(settings.last_address, last_address);
+		IMPORT_SETTING(settings.bg_tile, bg_tile, atoi(value));
+		IMPORT_SETTING(settings.show_names_in_spec, show_names_in_spec, atoi(value));
+		IMPORT_SETTING(settings.bg_tile_speed, bg_tile_speed, fmax(0.0F, atof(value)));
+		IMPORT_SETTING(settings.ui_accent_r, ui_accent_r, max(0, min(255, atoi(value))));
+		IMPORT_SETTING(settings.ui_accent_g, ui_accent_g, max(0, min(255, atoi(value))));
+		IMPORT_SETTING(settings.ui_accent_b, ui_accent_b, max(0, min(255, atoi(value))));
+		IMPORT_SETTING(settings.lighten_colors, lighten_colors, max(0, min(255, atoi(value))));
+		IMPORT_SETTING(settings.hud_shadows, hud_shadows, atoi(value));
+		IMPORT_SETTING(settings.spectator_speed, spectator_speed, max(0.1F, min(4.F, atof(value))));
+		IMPORT_SETTING(settings.iron_sight, iron_sight, atoi(value));
+		IMPORT_SETTING(settings.gmi, gmi, atoi(value));
+		IMPORT_SETTING(settings.disable_raw_input, disable_raw_input, atoi(value));
 	}
+
 	if(!strcmp(section, "controls")) {
 		for(int k = 0; k < list_size(&config_keys); k++) {
 			struct config_key_pair* key = list_get(&config_keys, k);
