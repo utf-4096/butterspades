@@ -29,7 +29,7 @@ void list_free(struct list* l) {
 	}
 }
 
-void* list_find(struct list* l, void* ref, enum list_traverse_direction dir, int (*cmp)(void* obj, void* ref)) {
+void* list_find(struct list* l, const void* ref, enum list_traverse_direction dir, int (*cmp)(const void* obj, const void* ref)) {
 	assert(l != NULL && cmp != NULL);
 
 	switch(dir) {
