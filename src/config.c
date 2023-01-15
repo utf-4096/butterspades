@@ -36,9 +36,22 @@ struct RENDER_OPTIONS settings, settings_tmp;
 struct list config_keys;
 struct list config_settings;
 
-struct list config_file;
+struct list config_file, config_overlay;
+int config_used_overlay = 0;
+
+static int config_compare_overlay(const void* obj, const void* ref) {
+	return !strcmp(*(const char**)obj, (const char*)ref);
+}
+
+static int config_is_overlaid(const char* name) {
+	return list_find(&config_overlay, name, LIST_TRAVERSE_FORWARD, config_compare_overlay) != NULL;
+}
 
 static void config_sets(const char* section, const char* name, const char* value) {
+	if(config_is_overlaid(name)) {
+		return;
+	}
+
 	for(int k = 0; k < list_size(&config_file); k++) {
 		struct config_file_entry* e = list_get(&config_file, k);
 		if(strcmp(e->name, name) == 0) {
@@ -46,6 +59,7 @@ static void config_sets(const char* section, const char* name, const char* value
 			return;
 		}
 	}
+
 	struct config_file_entry e;
 	strncpy(e.section, section, sizeof(e.section) - 1);
 	strncpy(e.name, name, sizeof(e.name) - 1);
@@ -80,7 +94,7 @@ void config_save() {
 	config_seti("client", "ui_accent_b", settings.ui_accent_b);
 	config_seti("client", "lighten_colors", settings.lighten_colors);
 	config_seti("client", "show_names_in_spec", settings.show_names_in_spec);
-	config_setf("client", "hud_shadows", settings.hud_shadows);
+	config_seti("client", "hud_shadows", settings.hud_shadows);
 	config_seti("client", "multisamples", settings.multisamples);
 	config_seti("client", "greedy_meshing", settings.greedy_meshing);
 	config_seti("client", "vsync", settings.vsync);
@@ -100,6 +114,9 @@ void config_save() {
 	config_seti("client", "show_player_arms", settings.player_arms);
 	config_seti("client", "chat_spacing", settings.chat_spacing);
 	config_setf("client", "spectator_speed", settings.spectator_speed);
+	config_seti("client", "iron_sight", settings.iron_sight);
+	config_seti("client", "gmi", settings.gmi);
+	config_seti("client", "disable_raw_input", settings.disable_raw_input);
 
 	for(int k = 0; k < list_size(&config_keys); k++) {
 		struct config_key_pair* e = list_get(&config_keys, k);
@@ -126,11 +143,13 @@ void config_save() {
 }
 
 static int config_read_key(void* user, const char* section, const char* name, const char* value) {
-	struct config_file_entry e;
-	strncpy(e.section, section, sizeof(e.section) - 1);
-	strncpy(e.name, name, sizeof(e.name) - 1);
-	strncpy(e.value, value, sizeof(e.value) - 1);
-	list_add(&config_file, &e);
+	if(!config_is_overlaid(name)) {
+		struct config_file_entry e;
+		strncpy(e.section, section, sizeof(e.section) - 1);
+		strncpy(e.name, name, sizeof(e.name) - 1);
+		strncpy(e.value, value, sizeof(e.value) - 1);
+		list_add(&config_file, &e);
+	}
 
 	if(!strcmp(section, "client")) {
 		if(!strcmp(name, "name")) {
@@ -198,6 +217,12 @@ static int config_read_key(void* user, const char* section, const char* name, co
 			settings.hud_shadows = atoi(value);
 		} else if(!strcmp(name, "spectator_speed")) {
 			settings.spectator_speed = max(0.1F, min(4.F, atof(value)));
+		} else if(!strcmp(name, "iron_sight")) {
+			settings.iron_sight = atoi(value);
+		} else if(!strcmp(name, "gmi")) {
+			settings.gmi = atoi(value);
+		} else if(!strcmp(name, "disable_raw_input")) {
+			settings.disable_raw_input = atoi(value);
 		}
 	}
 	if(!strcmp(section, "controls")) {
@@ -211,6 +236,13 @@ static int config_read_key(void* user, const char* section, const char* name, co
 		}
 	}
 	return 1;
+}
+
+static int config_read_overlay_key(void* user, const char* section, const char* name, const char* value) {
+	char* key = malloc(sizeof(char) * (strlen(name) + 1));
+	strcpy(key, name);
+	list_add(&config_overlay, &key);
+	config_read_key(user, section, name, value);
 }
 
 void config_register_key(int internal, int def, const char* name, int toggle, const char* display,
@@ -313,6 +345,11 @@ void config_reload() {
 		list_create(&config_file, sizeof(struct config_file_entry));
 	else
 		list_clear(&config_file);
+
+	if(!list_created(&config_overlay))
+		list_create(&config_overlay, sizeof(char*));
+	else
+		list_clear(&config_overlay);
 
 	if(!list_created(&config_keys))
 		list_create(&config_keys, sizeof(struct config_key_pair));
@@ -432,6 +469,15 @@ void config_reload() {
 	if(s) {
 		ini_parse_string(s, config_read_key, NULL);
 		free(s);
+	}
+
+	if(file_size("config.overlay.ini") != 0) {
+		config_used_overlay = 1;
+		s = file_load("config.overlay.ini");
+		if(s) {
+			ini_parse_string(s, config_read_overlay_key, NULL);
+			free(s);
+		}
 	}
 
 	if(!list_created(&config_settings))
@@ -737,5 +783,32 @@ void config_reload() {
 				 .max = 4.F,
 				 .help = "Speed of movement in spectator",
 				 .name = "Spectator speed",
+			 });
+	list_add(&config_settings,
+			 &(struct config_setting) {
+				 .value = &settings_tmp.iron_sight,
+				 .type = CONFIG_TYPE_INT,
+				 .min = 0,
+				 .max = 1,
+				 .help = "Use weapon-specific iron sights instead of a dot",
+				 .name = "Iron sight",
+			 });
+	list_add(&config_settings,
+			 &(struct config_setting) {
+				 .value = &settings_tmp.gmi,
+				 .type = CONFIG_TYPE_INT,
+				 .min = 0,
+				 .max = 1,
+				 .help = "Integrate gamemode features in the HUD",
+				 .name = "GMI (experimental)",
+			 });
+	list_add(&config_settings,
+			 &(struct config_setting) {
+				 .value = &settings_tmp.disable_raw_input,
+				 .type = CONFIG_TYPE_INT,
+				 .min = 0,
+				 .max = 1,
+				 .help = "Disables raw mouse input. Can help with buggy mice",
+				 .name = "Disable raw input",
 			 });
 }

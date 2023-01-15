@@ -67,6 +67,9 @@ extern struct RENDER_OPTIONS {
 	int chat_flip_on_open;
 	int chat_spacing;
 	float spectator_speed;
+	int iron_sight;
+	int gmi;
+	int disable_raw_input;
 } settings, settings_tmp;
 
 extern struct list config_keys;
@@ -99,7 +102,8 @@ struct config_setting {
 	void (*label_callback)(char* buffer, size_t length, int value, size_t index);
 };
 
-extern struct list config_settings;
+extern struct list config_settings, config_overlay;
+extern int config_used_overlay;
 
 void config_register_key(int internal, int def, const char* name, int toggle, const char* display,
 						 const char* category);
