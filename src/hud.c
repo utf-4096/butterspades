@@ -48,6 +48,7 @@
 #include "weapon.h"
 #include "tracer.h"
 #include "font.h"
+#include "gmi.h"
 
 struct hud* hud_active;
 struct window_instance* hud_window;
@@ -957,8 +958,38 @@ static void hud_ingame_render(mu_Context* ctx, float scalex, float scalef) {
 			   && cameracontroller_bodyview_mode)) {
 			glColor3f(1.0F, 1.0F, 1.0F);
 
-			texture_draw(&texture_target, ceil((settings.window_width - texture_target.width) / 2.0F), ceil((settings.window_height + texture_target.height) / 2.0F),
-							 texture_target.width, texture_target.height);
+			if(settings.iron_sight && players[local_id].held_item == TOOL_GUN && players[local_id].input.buttons.rmb
+			   && players[local_id].alive) {
+				struct texture* zoom;
+				switch(players[local_id].weapon) {
+					case WEAPON_RIFLE: zoom = &texture_zoom_semi; break;
+					case WEAPON_SMG: zoom = &texture_zoom_smg; break;
+					case WEAPON_SHOTGUN: zoom = &texture_zoom_shotgun; break;
+				}
+				float last_shot = is_local ? weapon_last_shot : players[local_id].gun_shoot_timer;
+				float zoom_factor = fmax(
+					0.25F * (1.0F - ((window_time() - last_shot) / weapon_delay(players[local_id].weapon))) + 1.0F,
+					1.0F);
+				float aspect_ratio = (float)zoom->width / (float)zoom->height;
+
+				texture_draw(zoom, (settings.window_width - settings.window_height * aspect_ratio * zoom_factor) / 2.0F,
+							 settings.window_height * (zoom_factor * 0.5F + 0.5F),
+							 settings.window_height * aspect_ratio * zoom_factor, settings.window_height * zoom_factor);
+				texture_draw_sector(zoom, 0, settings.window_height * (zoom_factor * 0.5F + 0.5F),
+									(settings.window_width - settings.window_height * aspect_ratio * zoom_factor)
+										/ 2.0F,
+									settings.window_height * zoom_factor, 0.0F, 0.0F, 1.0F / (float)zoom->width, 1.0F);
+				texture_draw_sector(
+					zoom, (settings.window_width + settings.window_height * aspect_ratio * zoom_factor) / 2.0F,
+					settings.window_height * (zoom_factor * 0.5F + 0.5F),
+					(settings.window_width - settings.window_height * aspect_ratio * zoom_factor) / 2.0F,
+					settings.window_height * zoom_factor, (float)(zoom->width - 1) / (float)zoom->width, 0.0F,
+					1.0F / (float)zoom->width, 1.0F);
+			} else {
+				texture_draw(&texture_target, ceil((settings.window_width - texture_target.width) / 2.0F), ceil((settings.window_height + texture_target.height) / 2.0F),
+								 texture_target.width, texture_target.height);
+			}
+
 
 			if(window_time() - local_player_last_damage_timer <= 0.5F && is_local) {
 				float ang = atan2(players[local_player_id].orientation.z, players[local_player_id].orientation.x)
@@ -1022,7 +1053,11 @@ static void hud_ingame_render(mu_Context* ctx, float scalex, float scalef) {
 			font_select(FONT_FIXEDSYS);
 			glColor3f(1.0F, 1.0F, 1.0F);
 
+			float gmi_y = 54.F;
+
 			if(players[local_id].held_item == TOOL_BLOCK) {
+				gmi_y += 64.F;
+
 				for(int y = 0; y < 8; y++) {
 					for(int x = 0; x < 8; x++) {
 						if(texture_block_color(x, y) == players[local_id].block.packed) {
@@ -1038,6 +1073,67 @@ static void hud_ingame_render(mu_Context* ctx, float scalex, float scalef) {
 				glColor3f(1.0F, 1.0F, 1.0F);
 
 				texture_draw(&texture_color_selection, settings.window_width - 64 - 7, 48.F + 64, 64, 64);
+			}
+
+			switch(gmi_mode) {
+				case GMI_MODE_ARENA: {
+					unsigned int team1_alive = 0;
+					unsigned int team2_alive = 0;
+					for(int k = 0; k < PLAYERS_MAX; k++) {
+						if(players[k].connected && players[k].alive) {
+							if(players[k].team == TEAM_1) {
+								team1_alive++;
+							} else if(players[k].team == TEAM_2) {
+								team2_alive++;
+							}
+						}
+					}
+
+					char count[4];
+					sprintf(count, "%i", team1_alive);
+
+					font_select(FONT_FANTASY);
+					glColor3ub(gamestate.team_1.red, gamestate.team_1.green, gamestate.team_1.blue);
+					// helmet and text
+					texture_draw_empty(settings.window_width - 8.F - 32.F, gmi_y + 32.F, 32.F, 16.F);
+					glColor3ub(255, 255, 255);
+					hud_font_render(settings.window_width - 8.F - 32.F - 30.F, gmi_y + 28.F, 30.F, count, .4F);
+
+					// skin
+					glColor3ub(222, 200, 141);
+					texture_draw_empty(settings.window_width - 8.F - 32.F, gmi_y + 16.F, 32.F, 16.F);
+
+					// eyes
+					glColor3ub(0, 0, 0);
+					texture_draw_empty(settings.window_width - 8.F - 26.F, gmi_y + 16.F, 6.F, 6.F);
+					texture_draw_empty(settings.window_width - 8.F - 11.F, gmi_y + 16.F, 6.F, 6.F);
+					// shadow
+					texture_draw_empty(settings.window_width - 8.F - 32.F, gmi_y, 32.F, 2.F);
+
+					// team 2
+					gmi_y += 40.F;
+
+					sprintf(count, "%i", team2_alive);
+					font_select(FONT_FANTASY);
+					glColor3ub(gamestate.team_2.red, gamestate.team_2.green, gamestate.team_2.blue);
+					// helmet and text
+					texture_draw_empty(settings.window_width - 8.F - 32.F, gmi_y + 32.F, 32.F, 16.F);
+					glColor3ub(255, 255, 255);
+					hud_font_render(settings.window_width - 8.F - 32.F - 30.F, gmi_y + 28.F, 30.F, count, .4F);
+
+					// skin
+					glColor3ub(222, 200, 141);
+					texture_draw_empty(settings.window_width - 8.F - 32.F, gmi_y + 16.F, 32.F, 16.F);
+
+					// eyes
+					glColor3ub(0, 0, 0);
+					texture_draw_empty(settings.window_width - 8.F - 26.F, gmi_y + 16.F, 6.F, 6.F);
+					texture_draw_empty(settings.window_width - 8.F - 11.F, gmi_y + 16.F, 6.F, 6.F);
+					// shadow
+					texture_draw_empty(settings.window_width - 8.F - 32.F, gmi_y, 32.F, 2.F);
+
+					break;
+				}
 			}
 		}
 
@@ -2868,6 +2964,11 @@ static void hud_settings_render(mu_Context* ctx, float scalex, float scaley) {
 
 		if(mu_header_ex(ctx, "All settings", MU_OPT_EXPANDED)) {
 			int width = mu_get_current_container(ctx)->body.w;
+			if(config_used_overlay != 0) {
+				mu_text_color(ctx, 255, 255, 60);
+				mu_text(ctx, "Some settings are managed by a config overlay.");
+				mu_text_color_default(ctx);				
+			}
 
 			for(int k = 0; k < list_size(&config_settings); k++) {
 				struct config_setting* a = list_get(&config_settings, k);
