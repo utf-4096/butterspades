@@ -41,6 +41,10 @@ extern struct texture texture_ammo_shotgun;
 
 extern struct texture texture_color_selection;
 
+extern struct texture texture_zoom_semi;
+extern struct texture texture_zoom_smg;
+extern struct texture texture_zoom_shotgun;
+
 extern struct texture texture_white;
 extern struct texture texture_loader;
 extern struct texture texture_target;

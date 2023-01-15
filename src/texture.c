@@ -355,6 +355,10 @@ void texture_init() {
 	texture_create(&texture_ammo_smg, "png/smgammo.png");
 	texture_create(&texture_ammo_shotgun, "png/shotgunammo.png");
 
+	texture_create(&texture_zoom_semi, "png/semi.png");
+	texture_create(&texture_zoom_smg, "png/smg.png");
+	texture_create(&texture_zoom_shotgun, "png/shotgun.png");
+
 	texture_create(&texture_white, "png/white.png");
 	texture_create(&texture_loader, "png/splashloader.png");
 	texture_create(&texture_target, "png/target.png");
