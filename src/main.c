@@ -416,8 +416,8 @@ void display() {
 		mu_Context* ctx = hud_active->ctx;
 
 		if(ctx) {
-			hud_active->ctx->style->padding = 5;
-			hud_active->ctx->style->spacing = 8;
+			hud_active->ctx->style->padding = settings.ui_padding;
+			hud_active->ctx->style->spacing = settings.ui_spacing;
 			hud_active->ctx->style->title_height = 24;
 			hud_active->ctx->style->scrollbar_size = 12;
 			hud_active->ctx->style->thumb_size = 8;

@@ -130,6 +130,8 @@ void config_save() {
 	config_seti("client", "iron_sight", settings.iron_sight);
 	config_seti("client", "gmi", settings.gmi);
 	config_seti("client", "disable_raw_input", settings.disable_raw_input);
+	config_seti("client", "ui_spacing", settings.ui_spacing);
+	config_seti("client", "ui_padding", settings.ui_padding);
 
 	for(int k = 0; k < list_size(&config_keys); k++) {
 		struct config_key_pair* e = list_get(&config_keys, k);
@@ -200,6 +202,8 @@ static int config_read_key(void* user, const char* section, const char* name, co
 		IMPORT_SETTING(settings.iron_sight, iron_sight, atoi(value));
 		IMPORT_SETTING(settings.gmi, gmi, atoi(value));
 		IMPORT_SETTING(settings.disable_raw_input, disable_raw_input, atoi(value));
+		IMPORT_SETTING(settings.ui_spacing, ui_spacing, atoi(value));
+		IMPORT_SETTING(settings.ui_padding, ui_padding, atoi(value));
 	}
 
 	if(!strcmp(section, "controls")) {
@@ -442,7 +446,17 @@ void config_reload() {
 
 	list_sort(&config_keys, config_key_cmp);
 
-	char* s = file_load("config.ini");
+	char* s;
+
+	if(file_size("config.default.ini") != 0) {
+		s = file_load("config.default.ini");
+		if(s) {
+			ini_parse_string(s, config_read_key, NULL);
+			free(s);
+		}
+	}
+
+	s = file_load("config.ini");
 	if(s) {
 		ini_parse_string(s, config_read_key, NULL);
 		free(s);
@@ -788,4 +802,23 @@ void config_reload() {
 				 .help = "Disables raw mouse input. Can help with buggy mice",
 				 .name = "Disable raw input",
 			 });
+	list_add(&config_settings,
+			 &(struct config_setting) {
+				 .value = &settings_tmp.ui_spacing,
+				 .type = CONFIG_TYPE_INT,
+				 .min = 8,
+				 .max = 32,
+				 .help = "Spacing between UI elements",
+				 .name = "UI Spacing",
+			 });
+	list_add(&config_settings,
+			 &(struct config_setting) {
+				 .value = &settings_tmp.ui_padding,
+				 .type = CONFIG_TYPE_INT,
+				 .min = 5,
+				 .max = 32,
+				 .help = "Added padding for UI elements",
+				 .name = "UI Padding",
+			 });
+
 }

@@ -70,6 +70,8 @@ extern struct RENDER_OPTIONS {
 	int iron_sight;
 	int gmi;
 	int disable_raw_input;
+	int ui_spacing;
+	int ui_padding;
 } settings, settings_tmp;
 
 extern struct list config_keys;
