@@ -1643,6 +1643,21 @@ static void hud_ingame_mouselocation(double x, double y) {
 	camera_overflow_adjust();
 }
 
+static void hud_switch_next_player() {
+	float nearest_dist = FLT_MAX;
+	int nearest_player = -1;
+	for(int k = 0; k < PLAYERS_MAX; k++)
+		if(player_can_spectate(&players[k]) && players[k].alive && k != cameracontroller_bodyview_player
+		   && distance3D(camera_x, camera_y, camera_z, players[k].pos.x, players[k].pos.y, players[k].pos.z)
+			   < nearest_dist) {
+			nearest_dist
+				= distance3D(camera_x, camera_y, camera_z, players[k].pos.x, players[k].pos.y, players[k].pos.z);
+			nearest_player = k;
+		}
+	if(nearest_player >= 0)
+		cameracontroller_bodyview_player = nearest_player;
+}
+
 static void hud_ingame_mouseclick(double x, double y, int button, int action, int mods) {
 	if(chat_input_mode != CHAT_NO_INPUT || show_exit) {
 		return;
@@ -1695,18 +1710,7 @@ static void hud_ingame_mouseclick(double x, double y, int button, int action, in
 		button_map[2] = (action == WINDOW_PRESS);
 	}
 	if(camera_mode == CAMERAMODE_BODYVIEW && button == WINDOW_MOUSE_MMB && action == WINDOW_PRESS) {
-		float nearest_dist = FLT_MAX;
-		int nearest_player = -1;
-		for(int k = 0; k < PLAYERS_MAX; k++)
-			if(player_can_spectate(&players[k]) && players[k].alive && k != cameracontroller_bodyview_player
-			   && distance3D(camera_x, camera_y, camera_z, players[k].pos.x, players[k].pos.y, players[k].pos.z)
-				   < nearest_dist) {
-				nearest_dist
-					= distance3D(camera_x, camera_y, camera_z, players[k].pos.x, players[k].pos.y, players[k].pos.z);
-				nearest_player = k;
-			}
-		if(nearest_player >= 0)
-			cameracontroller_bodyview_player = nearest_player;
+		hud_switch_next_player();
 	}
 	if(button == WINDOW_MOUSE_RMB && action == WINDOW_PRESS) {
 		players[local_player_id].input.buttons.rmb_start = window_time();
@@ -1978,8 +1982,12 @@ static void hud_ingame_keyboard(int key, int action, int mods, int internal) {
 				weapon_reload();
 			}
 
-			if(key == WINDOW_KEY_SNEAK && (camera_mode == CAMERAMODE_BODYVIEW || camera_mode == CAMERAMODE_SPECTATOR)) {
+			if(key == WINDOW_KEY_SWITCH_CAMERA && (camera_mode == CAMERAMODE_BODYVIEW || camera_mode == CAMERAMODE_SPECTATOR)) {
 				cameracontroller_bodyview_mode = !cameracontroller_bodyview_mode;
+			}
+
+			if(key == WINDOW_KEY_NEXT_PLAYER && camera_mode == CAMERAMODE_BODYVIEW) {
+				hud_switch_next_player();
 			}
 
 			if(screen_current == SCREEN_NONE && camera_mode == CAMERAMODE_FPS) {

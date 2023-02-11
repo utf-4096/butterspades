@@ -388,7 +388,9 @@ void config_reload() {
 	config_register_key(WINDOW_KEY_SELECT3, SDLK_3, NULL, 0, NULL, NULL);
 	config_register_key(WINDOW_KEY_HISTORY_PREVIOUS, SDLK_UP, "history_previous", 0, "Previous message", "Chat history");
 	config_register_key(WINDOW_KEY_HISTORY_NEXT, SDLK_DOWN, "history_next", 0, "Next message", "Chat history");
-	config_register_key(WINDOW_KEY_YCLAMP, SDLK_c, "y_clamp", 0, "Toggle Y-Clamp", "Movement");
+	config_register_key(WINDOW_KEY_YCLAMP, SDLK_c, "y_clamp", 0, "Toggle Y-Clamp", "Spectator");
+	config_register_key(WINDOW_KEY_SWITCH_CAMERA, SDLK_v, "switch_camera", 0, "Toggle 1st/3rd person view", "Spectator");
+	config_register_key(WINDOW_KEY_NEXT_PLAYER, SDLK_p, "next_player", 0, "Next alive player", "Spectator");
 #endif
 
 #ifdef USE_GLFW
@@ -441,7 +443,9 @@ void config_reload() {
 	config_register_key(WINDOW_KEY_SELECT3, GLFW_KEY_3, NULL, 0, NULL, NULL);
 	config_register_key(WINDOW_KEY_HISTORY_PREVIOUS, GLFW_KEY_UP, "history_previous", 0, "Previous message", "Chat history");
 	config_register_key(WINDOW_KEY_HISTORY_NEXT, GLFW_KEY_DOWN, "history_next", 0, "Next message", "Chat history");
-	config_register_key(WINDOW_KEY_YCLAMP, GLFW_KEY_C, "y_clamp", 0, "Toggle Y-Clamp", "Movement");
+	config_register_key(WINDOW_KEY_YCLAMP, GLFW_KEY_C, "y_clamp", 0, "Toggle Y-Clamp", "Spectator");
+	config_register_key(WINDOW_KEY_SWITCH_CAMERA, GLFW_KEY_V, "switch_camera", 0, "Toggle 1st/3rd person view", "Spectator");
+	config_register_key(WINDOW_KEY_NEXT_PLAYER, GLFW_KEY_P, "next_player", 0, "Next alive player", "Spectator");
 #endif
 
 	list_sort(&config_keys, config_key_cmp);
