@@ -264,12 +264,18 @@ mu_Rect mu_get_clip_rect(mu_Context *ctx) {
 
 
 int mu_check_clip(mu_Context *ctx, mu_Rect r) {
+  // Well, this is a hack and not actually a fix.
+  // For some reason the clip calculations are wrong, couldn't figure out why.
+  return MU_CLIP_PART;
+
+#if 0
   mu_Rect cr = mu_get_clip_rect(ctx);
   if (r.x > cr.x + cr.w || r.x + r.w < cr.x ||
       r.y > cr.y + cr.h || r.y + r.h < cr.y   ) { return MU_CLIP_ALL; }
   if (r.x >= cr.x && r.x + r.w <= cr.x + cr.w &&
       r.y >= cr.y && r.y + r.h <= cr.y + cr.h ) { return 0; }
   return MU_CLIP_PART;
+#endif
 }
 
 
