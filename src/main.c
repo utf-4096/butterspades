@@ -431,6 +431,7 @@ void display() {
 			mu_end(ctx);
 
 			glEnable(GL_BLEND);
+			glEnable(GL_SCISSOR_TEST);
 			glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 			mu_Command* cmd = NULL;
 			while(mu_next_command(ctx, &cmd)) {
@@ -477,6 +478,7 @@ void display() {
 				}
 			}
 			glDisable(GL_BLEND);
+			glDisable(GL_SCISSOR_TEST);
 		}
 	}
 
