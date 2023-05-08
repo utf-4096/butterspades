@@ -107,7 +107,7 @@ endif()
 set(GIT_COMMIT_HASH "?")
 
 execute_process(
-  COMMAND git log -1 --format=%h
+  COMMAND git describe --always --dirty
   WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
   OUTPUT_VARIABLE GIT_COMMIT_HASH
   OUTPUT_STRIP_TRAILING_WHITESPACE
