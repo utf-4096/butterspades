@@ -2,7 +2,7 @@
 
 <img align="left" src="resources.override/png/splash_icon.png"> <b>ButterSpades</b>
 ---------------
-[Download for Windows](https://butter.penguins.win/download/)
+**Windows**: [64bit](https://butter.penguins.win/download/) - [32bit](https://butter.penguins.win/download32/)
 
 
 ButterSpades is a fork which aims to improve the overall UI and feel of [BetterSpades](https://github.com/xtreme8000/BetterSpades).
