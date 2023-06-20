@@ -20,10 +20,18 @@
 #ifndef NETWORK_H
 #define NETWORK_H
 
-#ifdef JENKINS_BUILD
-#define BS_VER_INFO "jenkins/" JENKINS_BUILD
+#if defined(__amd64__) || defined(__x86_64__)
+#define BS_VER_ARCH "x86_64"
+#elif defined(__i386__)
+#define BS_VER_ARCH "i686"
 #else
-#define BS_VER_INFO "git/" GIT_COMMIT_HASH
+#define BS_VER_ARCH "unknown"
+#endif
+
+#ifdef JENKINS_BUILD
+#define BS_VER_INFO BS_VER_ARCH " jenkins/" JENKINS_BUILD
+#else
+#define BS_VER_INFO BS_VER_ARCH " git/" GIT_COMMIT_HASH
 #endif
 
 const char* network_reason_disconnect(int code);
