@@ -2373,7 +2373,11 @@ static void hud_serverlist_init() {
 	serverlist_is_outdated = 0;
 	request_serverlist = http_get("http://services.buildandshoot.com/serverlist.json", NULL);
 #ifdef JENKINS_BUILD
+#if defined(__amd64__) || defined(__x86_64__)
 	request_version = http_get("http://butter.penguins.win/api/version/", NULL);
+#elif defined(__i386__)
+	request_version = http_get("http://butter.penguins.win/api/version32/", NULL);
+#endif
 #endif
 	if(!serverlist_news_exists)
 		request_news = http_get("http://aos.party/bs/news/", NULL);
