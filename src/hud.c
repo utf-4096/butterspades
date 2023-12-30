@@ -2344,6 +2344,7 @@ static int server_count = 0;
 static int player_count = 0;
 static struct serverlist_entry* serverlist;
 static int serverlist_is_outdated;
+static int serverlist_checked_for_updates = 0;
 static int serverlist_con_established;
 static pthread_mutex_t serverlist_lock;
 
@@ -2370,14 +2371,17 @@ static void hud_serverlist_init() {
 
 	player_count = 0;
 	server_count = 0;
-	serverlist_is_outdated = 0;
 	request_serverlist = http_get("http://services.buildandshoot.com/serverlist.json", NULL);
 #ifdef JENKINS_BUILD
+	if (!serverlist_checked_for_updates) {
+		serverlist_is_outdated = 0;
 #if defined(__amd64__) || defined(__x86_64__)
-	request_version = http_get("http://butter.penguins.win/api/version/", NULL);
+		request_version = http_get("http://butter.penguins.win/api/version/", NULL);
 #elif defined(__i386__)
-	request_version = http_get("http://butter.penguins.win/api/version32/", NULL);
+		request_version = http_get("http://butter.penguins.win/api/version32/", NULL);
 #endif
+		serverlist_checked_for_updates = 1;
+	}
 #endif
 	if(!serverlist_news_exists)
 		request_news = http_get("http://aos.party/bs/news/", NULL);
