@@ -24,6 +24,7 @@
 #include <limits.h>
 #include <math.h>
 
+#include "log.h"
 #include "window.h"
 #include "file.h"
 #include "ini.h"
@@ -36,8 +37,7 @@ struct RENDER_OPTIONS settings, settings_tmp;
 struct list config_keys;
 struct list config_settings;
 
-struct list config_file, config_overlay;
-int config_used_overlay = 0;
+struct list config_file;
 
 #define IMPORT_SETTING(key, ini, _value)        \
     if(!strcmp(name, #ini)) {                   \
@@ -51,20 +51,7 @@ int config_used_overlay = 0;
         return 0;                               \
     }                                           \
 
-
-static int config_compare_overlay(const void* obj, const void* ref) {
-	return !strcmp(*(const char**)obj, (const char*)ref);
-}
-
-static int config_is_overlaid(const char* name) {
-	return list_find(&config_overlay, name, LIST_TRAVERSE_FORWARD, config_compare_overlay) != NULL;
-}
-
 static void config_sets(const char* section, const char* name, const char* value) {
-	if(config_is_overlaid(name)) {
-		return;
-	}
-
 	for(int k = 0; k < list_size(&config_file); k++) {
 		struct config_file_entry* e = list_get(&config_file, k);
 		if(strcmp(e->name, name) == 0) {
@@ -158,14 +145,6 @@ void config_save() {
 }
 
 static int config_read_key(void* user, const char* section, const char* name, const char* value) {
-	if(!config_is_overlaid(name)) {
-		struct config_file_entry e;
-		strncpy(e.section, section, sizeof(e.section) - 1);
-		strncpy(e.name, name, sizeof(e.name) - 1);
-		strncpy(e.value, value, sizeof(e.value) - 1);
-		list_add(&config_file, &e);
-	}
-
 	if(!strcmp(section, "client")) {
 		IMPORT_SETTING_STR(settings.name, name);
 		IMPORT_SETTING(settings.window_width, xres, atoi(value));
@@ -217,13 +196,6 @@ static int config_read_key(void* user, const char* section, const char* name, co
 		}
 	}
 	return 1;
-}
-
-static int config_read_overlay_key(void* user, const char* section, const char* name, const char* value) {
-	char* key = malloc(sizeof(char) * (strlen(name) + 1));
-	strcpy(key, name);
-	list_add(&config_overlay, &key);
-	config_read_key(user, section, name, value);
 }
 
 void config_register_key(int internal, int def, const char* name, int toggle, const char* display,
@@ -326,11 +298,6 @@ void config_reload() {
 		list_create(&config_file, sizeof(struct config_file_entry));
 	else
 		list_clear(&config_file);
-
-	if(!list_created(&config_overlay))
-		list_create(&config_overlay, sizeof(char*));
-	else
-		list_clear(&config_overlay);
 
 	if(!list_created(&config_keys))
 		list_create(&config_keys, sizeof(struct config_key_pair));
@@ -450,29 +417,10 @@ void config_reload() {
 
 	list_sort(&config_keys, config_key_cmp);
 
-	char* s;
-
-	if(file_size("config.default.ini") != 0) {
-		s = file_load("config.default.ini");
-		if(s) {
-			ini_parse_string(s, config_read_key, NULL);
-			free(s);
-		}
-	}
-
-	s = file_load("config.ini");
+	char* s = file_load("config.ini");
 	if(s) {
 		ini_parse_string(s, config_read_key, NULL);
 		free(s);
-	}
-
-	if(file_size("config.overlay.ini") != 0) {
-		config_used_overlay = 1;
-		s = file_load("config.overlay.ini");
-		if(s) {
-			ini_parse_string(s, config_read_overlay_key, NULL);
-			free(s);
-		}
 	}
 
 	if(!list_created(&config_settings))

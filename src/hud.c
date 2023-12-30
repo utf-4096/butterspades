@@ -2976,11 +2976,6 @@ static void hud_settings_render(mu_Context* ctx, float scalex, float scaley) {
 
 		if(mu_header_ex(ctx, "All settings", MU_OPT_EXPANDED)) {
 			int width = mu_get_current_container(ctx)->body.w;
-			if(config_used_overlay != 0) {
-				mu_text_color(ctx, 255, 255, 60);
-				mu_text(ctx, "Some settings are managed by a config overlay.");
-				mu_text_color_default(ctx);				
-			}
 
 			for(int k = 0; k < list_size(&config_settings); k++) {
 				struct config_setting* a = list_get(&config_settings, k);

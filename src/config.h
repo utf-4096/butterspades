@@ -104,8 +104,7 @@ struct config_setting {
 	void (*label_callback)(char* buffer, size_t length, int value, size_t index);
 };
 
-extern struct list config_settings, config_overlay;
-extern int config_used_overlay;
+extern struct list config_settings;
 
 void config_register_key(int internal, int def, const char* name, int toggle, const char* display,
 						 const char* category);
